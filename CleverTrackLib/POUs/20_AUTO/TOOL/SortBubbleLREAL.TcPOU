@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="SortBubbleLREAL" Id="{b561f5e1-281c-408e-a4c5-cbb5c2bf3b2f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION SortBubbleLREAL : BOOL
+VAR_INPUT
+    pArray      : POINTER TO LREAL; // Pointer to the array of LREAL
+    iStartIndex : INT;
+    iStopIndex  : INT;
+END_VAR
+VAR
+    i    : INT;
+    j    : INT;
+    temp : LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FOR i := iStartIndex TO iStopIndex BY 1 DO
+    FOR j := iStartIndex TO iStopIndex - i -1 BY 1 DO
+        IF pArray[j] > pArray[j + 1] THEN
+            temp          := pArray[j];
+            pArray[j]     := pArray[j + 1];
+            pArray[j + 1] := temp;
+        END_IF
+    END_FOR
+END_FOR
+]]></ST>
+    </Implementation>
+    <LineIds Name="SortBubbleLREAL">
+      <LineId Id="120" Count="8" />
+      <LineId Id="40" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

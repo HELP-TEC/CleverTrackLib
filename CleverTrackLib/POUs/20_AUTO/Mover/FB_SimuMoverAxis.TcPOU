@@ -1,0 +1,511 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_SimuMoverAxis" Id="{e4b291f3-54ae-4868-9630-15a3c3e15ef8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SimuMoverAxis IMPLEMENTS IObject
+VAR_INPUT
+    xIN_StopMover : BOOL; // stop the mover from movinf
+END_VAR
+VAR_OUTPUT
+    outSimuCurrentPos   : Pos2D_t; // Mover position, expressed as slot number
+    outSimuCurrentPosSC : Pos2D_t; // Mover position, expressed as pixel for SC
+    outSimuCurrentRot   : INT;     // mover current rotation
+    isInPos             : BOOL;    // true when targetPos = currentPos
+END_VAR
+VAR
+    // with tick rate at 10ms, a value of 10 gives us 1m/s
+    _Velocity    : LREAL := 0;     // Mover velocity, expressed as mm per tick, max is 10m/s
+    _ErrorState  : INT   := 0;     // error state, not used
+    _TargetPos   : LREAL := 0;     // last target pos
+    _CurrentPos  : LREAL := 0;     // Current Pos, but with more resolution than the pixel
+    _IsColliding : BOOL  := FALSE; // When true, the mover should not move
+    _LastPos     : LREAL := 0;     // last position, used to trigger the xStuck flag
+    _xStuck      : BOOL;           // true when the axis does not move
+    _willCollide : BOOL := FALSE;  // TRUE if a collision will occure with the current velocity
+
+    {attribute 'hide'}
+    _lrNextStopPos : LREAL; // local variable used to get next stop
+
+    _iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+
+    _CurrentDir : MoverDirection_e := MoverDirection_e.Farward;
+END_VAR
+
+VAR_TEMP
+    _MoverAccel : LREAL; // Mover acceleration, can be positive or negative depending on the direction
+END_VAR
+
+VAR CONSTANT
+    MAX_POS  : LREAL := CONST.MAX_TRACK_LENGTH; // should be defined elsewhere ...
+    MAX_SIZE : LREAL := CONST.MAX_MOVER_SIZE;   // Maxium size of the mover
+    //MOVER_ACCEL        : LREAL := 0.1;                      // Mover acceleration, in mm/tick^2
+    //MOVER_VELOCITY_MAX : LREAL := 20;                     // Mover velocity, expressed as mm per tick, max is 10m/s
+    MOVER_VELOCITY_MIN : LREAL := 1.0; // Mover velocity, expressed as mm per tick, max is 10m/s
+END_VAR
+VAR_STAT
+    _iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT xIN_StopMover THEN // Do not change momemtum when we stop the movers from HMI
+    IF MoverDirection_e.Farward = THIS^._CurrentDir THEN
+        _MoverAccel := SIMU.lrAccelMover;
+    ELSE
+        _MoverAccel := -SIMU.lrAccelMover;
+    END_IF
+
+    IF NOT _IsColliding THEN
+
+        IF THIS^.GetStopLen(_Velocity, SIMU.lrAccelMover) >= DistToTravel(_CurrentPos, _TargetPos) OR
+           THIS^._willCollide THEN
+            _Velocity := _Velocity - _MoverAccel;
+
+        ELSIF SIMU.lrSpeedMover > ABS(_Velocity) AND _CurrentPos <> _TargetPos THEN
+            _Velocity := _Velocity + _MoverAccel;
+
+        END_IF
+    ELSE
+        _Velocity := _Velocity - _MoverAccel;
+    END_IF
+END_IF
+
+// protect max and min speed
+IF SIMU.lrSpeedMover < ABS(_Velocity) THEN
+    IF MoverDirection_e.Farward = THIS^._CurrentDir THEN
+        _Velocity := SIMU.lrSpeedMover;
+    ELSE
+        _Velocity := -SIMU.lrSpeedMover;
+    END_IF
+ELSIF ABS(_Velocity) < MOVER_VELOCITY_MIN THEN
+    IF MoverDirection_e.Farward = THIS^._CurrentDir THEN
+        _Velocity := MOVER_VELOCITY_MIN;
+    ELSE
+        _Velocity := -MOVER_VELOCITY_MIN;
+    END_IF
+END_IF
+
+IF NOT _IsColliding AND NOT xIN_StopMover THEN
+
+    IF DistToTravel(_CurrentPos, _TargetPos) > ABS(_Velocity) THEN
+        _CurrentPos := _CurrentPos + _Velocity;
+
+    ELSE
+        _CurrentPos := _TargetPos;
+        _Velocity   := 0;
+
+    END_IF
+END_IF
+
+IF _CurrentPos >= MAX_POS THEN
+    _CurrentPos := _CurrentPos - MAX_POS;
+    // we prevent the stuck flag to be true at the end of the track
+    THIS^._LastPos := THIS^._LastPos - MAX_POS;
+END_IF
+
+isInPos := EqualDelta(_CurrentPos, _TargetPos, 1.0); // we use delta comparison beacause axis is always at a low value 
+
+outSimuCurrentPos   := THIS^.ResolvePos(THIS^.CurrentPos, outSimuCurrentRot);
+outSimuCurrentPosSC := THIS^.ResolvePosSC(THIS^.CurrentPos, outSimuCurrentRot);
+
+_xStuck        := (THIS^._CurrentPos < (THIS^._LastPos + _Velocity)) AND NOT isInPos;
+THIS^._LastPos := THIS^._CurrentPos;
+]]></ST>
+    </Implementation>
+    <Property Name="CurrentPos" Id="{31cd1fe4-d1f0-484f-9411-192d8e5d5df6}">
+      <Declaration><![CDATA[PROPERTY CurrentPos : LREAL]]></Declaration>
+      <Get Name="Get" Id="{1763a654-4191-469e-8942-c870de606777}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF CONST.BIND_WITH_TRACK THEN
+    CurrentPos := TO_LREAL(gMoverAxis.I_CT_Shuttle_from_BR.asStruct[THIS^._iID].diCurrentPos_um) / 1000.0;
+ELSE
+    CurrentPos := _CurrentPos;
+END_IF
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{8cdfda8b-d4ff-40d0-b8f0-71232cae32ca}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="CurrentVelocity" Id="{83b80868-062c-4f9c-916e-2c51c7187488}">
+      <Declaration><![CDATA[PROPERTY CurrentVelocity : LREAL]]></Declaration>
+      <Get Name="Get" Id="{1b8160ed-8488-4734-98ab-29c07130fdf2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[CurrentVelocity := THIS^._Velocity;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{bf5be8a7-b24f-4895-9533-5bb3ad5c8176}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Equals" Id="{bc7817bb-e600-44ea-ae3f-4a153af74a37}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{72d28725-58d0-437b-9a8d-a5f893a5fb8d}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode  : BOOL; // if TRUE, the instance afterwards gets moved into the copy code (online change)
+
+    PosInit : LREAL; // initial position at startup
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter := THIS^._iInstanceCounter +1;
+IF PosInit < THIS^.MAX_POS THEN
+    THIS^._CurrentPos := PosInit;
+ELSE
+    THIS^._CurrentPos := 0;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetStopLen" Id="{06758e8e-e58e-425c-a2f4-733518acddb8}">
+      <Declaration><![CDATA[METHOD PRIVATE GetStopLen : LREAL
+VAR_INPUT
+    currentVelocity : LREAL;
+    currentAccel    : LREAL;
+END_VAR
+VAR
+    tickToStop : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// This function search the position we will get if we stop now
+//
+// (velocity)
+//     ^          _________   <- we are here, at the end of the top slope
+//     |        /          \
+//     |       /            \
+//     |   ___/              \______
+//     |     
+//     ┼------------------------------>  (time)
+//
+// (position)
+//     ^ 
+//     |                      _________
+//     |                  .../
+//     |               ../    ^
+//     |            ../       |
+//     |          ../         we search this position
+//     |   ___.../
+//     | 
+//     ┼------------------------------>  (time)
+
+IF currentAccel <= 0 THEN
+    ASSERT(currentAccel > 0);
+    RETURN;
+END_IF
+
+// TO_INT floor the result, and we need at least 1 tick to stop
+tickToStop := TO_INT(currentVelocity / currentAccel) + 1;
+
+GetStopLen := tickToStop * currentVelocity / 2;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsColliding" Id="{818fc438-3735-47df-9bf0-a9c5adfa8284}">
+      <Declaration><![CDATA[// only check the collision in one way, this prevent
+// all the mover chain to be stucked
+METHOD IsColliding : BOOL
+VAR_INPUT
+    nextMover : REFERENCE TO FB_SimuMoverAxis;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsColliding := FALSE;
+
+IF DistToTravel(THIS^.CurrentPos, nextMover.CurrentPos) <= CONST.MAX_MOVER_SIZE THEN
+    IsColliding := TRUE;
+
+END_IF
+
+THIS^._IsColliding := IsColliding;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveTo" Id="{e7b08e45-167e-44ee-ab29-5922dbe60a6e}">
+      <Declaration><![CDATA[METHOD PUBLIC MoveTo : REFERENCE TO FB_SimuMoverAxis
+VAR_INPUT
+    Position : LREAL; // move the axis to this position
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._TargetPos := Position;
+THIS^._CurrentDir := MoverDirection_e.Farward;
+isInPos := THIS^._CurrentPos = THIS^._TargetPos;
+MoveTo REF= THIS^;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ResolvePos" Id="{ae99c9ac-f351-450a-90bd-ebecafcfb8a2}">
+      <Declaration><![CDATA[METHOD ResolvePos : Pos2D_t
+VAR_INPUT
+    inX      : LREAL;
+    rotation : REFERENCE TO INT;
+END_VAR
+VAR CONSTANT
+    (* The track has this dimension in reality
+              __________
+     1030mm (___________) 1030 mm
+              4000 mm
+			  
+     and we map it like that:
+	   __   80 (radius)
+	  |  |
+	  |  |  800
+	  |  |
+	  |__|
+	        80 (raidus)
+    *)
+    START_X     : DINT  := 0;
+    START_Y     : DINT  := 0;
+    MAX_SIMU_DX : DINT  := 120;
+    MAX_SIMU_DY : DINT  := 800;
+    RADIUS_X    : LREAL := 60.0;
+    RADIUS_Y    : LREAL := 100.0;
+
+    FIRST_RADIUS_START  : LREAL := 4000;
+    FIRST_RADIUS_END    : LREAL := 5030;
+    SECOND_RADIUS_START : LREAL := 9030;
+    SECOND_RADIUS_END   : LREAL := 10060;
+END_VAR
+
+VAR
+    x_rad_calc : LREAL;
+    y_rad_calc : LREAL;
+    FACTOR_Y   : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FACTOR_Y := FIRST_RADIUS_START / MAX_SIMU_DY;
+
+IF inX < 0 THEN
+    ResolvePos.x := START_X;
+    ResolvePos.y := START_Y;
+    rotation     := 0;
+
+ELSIF inX >= 0 AND inX <= FIRST_RADIUS_START THEN
+    ResolvePos.x := START_X;
+    ResolvePos.y := START_Y + TO_DINT(inX / FACTOR_Y);
+    rotation     := 0;
+
+ELSIF inX > FIRST_RADIUS_START AND inX < FIRST_RADIUS_END THEN
+
+    // should go between -1RAD and +1RAD
+    x_rad_calc   := ((inX - FIRST_RADIUS_START) * 2 / (FIRST_RADIUS_END - FIRST_RADIUS_START) - 1) * PI / 2;
+    ResolvePos.x := TO_DINT(SIN(x_rad_calc) * RADIUS_X) + START_X + TO_DINT(RADIUS_X);
+
+    // should go from 0RAD to 1RAD, then 0RAD
+    y_rad_calc   := (1 - (inX - FIRST_RADIUS_START) * 2 / (FIRST_RADIUS_END - FIRST_RADIUS_START)) * PI / 2;
+    ResolvePos.y := TO_DINT(COS(y_rad_calc) * RADIUS_Y + START_Y + MAX_SIMU_DY);
+
+    rotation := TO_INT(SIN(x_rad_calc) * 90 + 90);
+
+ELSIF inX >= FIRST_RADIUS_END AND inX <= SECOND_RADIUS_START THEN
+    ResolvePos.x := START_X + MAX_SIMU_DX;
+    ResolvePos.y := START_Y + MAX_SIMU_DY - TO_DINT((inX - FIRST_RADIUS_END) / FACTOR_Y);
+    rotation     := 180;
+
+ELSIF inX > SECOND_RADIUS_START AND inX < SECOND_RADIUS_END THEN
+    // should go between -1RAD and +1RAD
+    x_rad_calc   := ((inX - SECOND_RADIUS_START) * 2 / (SECOND_RADIUS_END - SECOND_RADIUS_START) - 1) * PI / 2;
+    ResolvePos.x := START_X - TO_DINT(SIN(x_rad_calc) * RADIUS_X) + TO_DINT(RADIUS_X);
+
+    // should go from 0RAD to 1RAD, then 0RAD
+    y_rad_calc   := (1 - (inX - SECOND_RADIUS_START) * 2 / (SECOND_RADIUS_END - SECOND_RADIUS_START)) * PI / 2;
+    ResolvePos.y := START_Y - TO_DINT(COS(y_rad_calc) * RADIUS_Y);
+
+    rotation := TO_INT(SIN(x_rad_calc) * 90 + 270);
+
+ELSE
+    ResolvePos.x := START_X;
+    ResolvePos.y := START_Y;
+    rotation     := 0;
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ResolvePosSC" Id="{e7662918-4d5b-4c9e-a1d8-15bac58007ec}">
+      <Declaration><![CDATA[METHOD ResolvePosSC : Pos2D_t
+VAR_INPUT
+    inX      : LREAL;
+    rotation : REFERENCE TO INT;
+END_VAR
+VAR CONSTANT
+    (* The track has this dimension in reality
+              __________
+     1030mm (___________) 1030 mm
+              4000 mm
+			  
+     and we map it like that:
+	   __   80 (radius)
+	  |  |
+	  |  |  800
+	  |  |
+	  |__|
+	        80 (raidus)
+    *)
+    START_X     : DINT  := 0;
+    START_Y     : DINT  := 0;
+    MAX_SIMU_DX : DINT  := 70;
+    MAX_SIMU_DY : DINT  := 800;
+    RADIUS_X    : LREAL := 35;
+    RADIUS_Y    : LREAL := 65.0;
+
+    FIRST_RADIUS_START  : LREAL := 4000;
+    FIRST_RADIUS_END    : LREAL := 5030;
+    SECOND_RADIUS_START : LREAL := 9030;
+    SECOND_RADIUS_END   : LREAL := 10060;
+END_VAR
+
+VAR
+    x_rad_calc : LREAL;
+    y_rad_calc : LREAL;
+    FACTOR_Y   : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FACTOR_Y := FIRST_RADIUS_START / MAX_SIMU_DY;
+
+IF inX < 0 THEN
+    ResolvePosSC.x := START_X;
+    ResolvePosSC.y := START_Y;
+    rotation       := 0;
+
+ELSIF inX >= 0 AND inX <= FIRST_RADIUS_START THEN
+    ResolvePosSC.x := START_X;
+    ResolvePosSC.y := START_Y + TO_DINT(inX / FACTOR_Y);
+    rotation       := 0;
+
+ELSIF inX > FIRST_RADIUS_START AND inX < FIRST_RADIUS_END THEN
+
+    // should go between -1RAD and +1RAD
+    x_rad_calc     := ((inX - FIRST_RADIUS_START) * 2 / (FIRST_RADIUS_END - FIRST_RADIUS_START) - 1) * PI / 2;
+    ResolvePosSC.x := TO_DINT(SIN(x_rad_calc) * RADIUS_X) + START_X + TO_DINT(RADIUS_X);
+
+    // should go from 0RAD to 1RAD, then 0RAD
+    y_rad_calc     := (1 - (inX - FIRST_RADIUS_START) * 2 / (FIRST_RADIUS_END - FIRST_RADIUS_START)) * PI / 2;
+    ResolvePosSC.y := TO_DINT(COS(y_rad_calc) * RADIUS_Y + START_Y + MAX_SIMU_DY);
+
+    rotation := TO_INT(SIN(x_rad_calc) * 90 + 90);
+
+ELSIF inX >= FIRST_RADIUS_END AND inX <= SECOND_RADIUS_START THEN
+    ResolvePosSC.x := START_X + MAX_SIMU_DX;
+    ResolvePosSC.y := START_Y + MAX_SIMU_DY - TO_DINT((inX - FIRST_RADIUS_END) / FACTOR_Y);
+    rotation       := 180;
+
+ELSIF inX > SECOND_RADIUS_START AND inX < SECOND_RADIUS_END THEN
+    // should go between -1RAD and +1RAD
+    x_rad_calc     := ((inX - SECOND_RADIUS_START) * 2 / (SECOND_RADIUS_END - SECOND_RADIUS_START) - 1) * PI / 2;
+    ResolvePosSC.x := START_X - TO_DINT(SIN(x_rad_calc) * RADIUS_X) + TO_DINT(RADIUS_X);
+
+    // should go from 0RAD to 1RAD, then 0RAD
+    y_rad_calc     := (1 - (inX - SECOND_RADIUS_START) * 2 / (SECOND_RADIUS_END - SECOND_RADIUS_START)) * PI / 2;
+    ResolvePosSC.y := START_Y - TO_DINT(COS(y_rad_calc) * RADIUS_Y);
+
+    rotation := TO_INT(SIN(x_rad_calc) * 90 + 270);
+
+ELSE
+    ResolvePosSC.x := START_X;
+    ResolvePosSC.y := START_Y;
+    rotation       := 0;
+
+END_IF
+
+ResolvePosSC.x := -ResolvePosSC.x;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ToString" Id="{421ebbd3-77e4-4d26-8bbe-5924e9012954}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR
+VAR
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_SimuMoverAxis_', TO_STRING(THIS^._iID));]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="WillCollide" Id="{cedecea8-3e50-4623-a6e4-35b65c718a70}">
+      <Declaration><![CDATA[// Use this method in a collider manager so the simu axis 
+// will know when to stop itself
+METHOD WillCollide : BOOL
+VAR_INPUT
+    nextMover : REFERENCE TO FB_SimuMoverAxis;
+END_VAR
+VAR
+    diffVelocity : LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._willCollide := FALSE;
+diffVelocity       := 0;
+
+// If the 2 movers are moving tarwards each other
+IF (THIS^._Velocity > 0) AND (nextMover.CurrentVelocity < 0) THEN
+    diffVelocity := SQRT(THIS^._Velocity * THIS^._Velocity + (nextMover.CurrentVelocity * nextMover.CurrentVelocity));
+
+    // If the 2 movers are moving in the same direction
+ELSE
+    IF ABS(THIS^._Velocity) > ABS(nextMover.CurrentVelocity) THEN
+        diffVelocity :=
+            SQRT(THIS^._Velocity * THIS^._Velocity - (nextMover.CurrentVelocity * nextMover.CurrentVelocity));
+    END_IF
+END_IF
+
+THIS^._willCollide
+    := DistToTravel(THIS^.CurrentPos, nextMover.CurrentPos) <=
+       THIS^.GetStopLen(diffVelocity, SIMU.lrAccelMover) + CONST.MAX_MOVER_SIZE;
+
+WillCollide := THIS^._willCollide;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="xStuck" Id="{5ad563cc-88b0-4a7e-abf2-f7ca32c4a589}">
+      <Declaration><![CDATA[PROPERTY xStuck : BOOL]]></Declaration>
+      <Get Name="Get" Id="{b8a1c096-1197-47a3-95c2-24aa6c43915d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[xStuck := _xStuck;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ab837be6-ea60-42d1-9fb5-8849bec7f35e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+  </POU>
+</TcPlcObject>

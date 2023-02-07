@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="StationDict" Id="{7f3cd863-6356-409d-a480-336d9d9a09b4}">
+    <Declaration><![CDATA[// Get information from a mover using this structure
+TYPE StationDict :
+STRUCT
+    StationNum : INT;
+    StationPos : LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

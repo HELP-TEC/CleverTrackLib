@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_My_Piece" Id="{1321c23e-0ee0-4cf1-8351-e714389d28ec}" SpecialFunc="None">
+    <Declaration><![CDATA[// Piece description used in this project
+FUNCTION_BLOCK PUBLIC FB_My_Piece EXTENDS FB_Piece
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+    // add special piece information here
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="UnloadPiece" Id="{ef4e5321-1c27-4327-8f0d-f0c43b8bed65}">
+      <Declaration><![CDATA[METHOD PUBLIC UnloadPiece : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SUPER^.UnloadPiece();]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

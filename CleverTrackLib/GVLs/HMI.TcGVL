@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <GVL Name="HMI" Id="{687ca587-9d31-405e-8ad6-0cc233431a10}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+(*******************************************************************)
+(* Globale HMI Variablen *)
+(*******************************************************************)
+	xImmer0	: 	BOOL := FALSE;	//ALLWAYS FALSE
+	xImmer1	: 	BOOL := TRUE;	//ALLWAYS TRUE
+
+(*******************************************************************)
+(* Flags *)
+(*******************************************************************)
+	enState		:	enState;	//SYSTEM STATUS
+	xInitDone	:	BOOL;		//SYSTEM INITIALIZED
+	xRefDone	:	BOOL;		//Axis REF
+	xAlarm		:	BOOL;		//ALARM AKTIV
+	xMessage	:	BOOL;		//MELDUNG AKTIV
+	xWait		:	BOOL;		//ALLE FBs warten
+	xAIRon		:	BOOL;		//Luftdruck IO
+	xSPC		:	BOOL;		//SPC angewählt
+
+(*******************************************************************)
+(* Buttons *)
+(*******************************************************************)
+	//Control
+	btArMain	: ARRAY[0..20] OF structButton;	(*	
+													0: AUTO
+													1: STEP
+													2: END
+													3: MANU
+													4: INIT
+													5: STOP
+													6: LEER
+													7: QUIT
+													8: RESET TEMP COUNTER
+													9: START
+													10: ...
+												*)
+	//Manuel Station 1
+	btArManu01	: ARRAY[0..10] OF structButton;	(*	
+													0: Zyklus	
+													1: 101.01
+													2: 101.02
+													3: 101.03
+													*)
+	//Manuel Station 2
+	btArManu02	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 3
+	btArManu03	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 4
+	btArManu04	: ARRAY[0..10] OF structButton;	(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 5
+	btArManu05	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 6
+	btArManu06	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 7
+	btArManu07	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 8
+	btArManu08	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 9
+	btArManu09	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*)
+	//Manuel Station 10
+	btArManu10	: ARRAY[0..10] OF structButton;(*	
+													0: Zyklus	
+													1: 
+													*) 
+
+(*******************************************************************)
+(* ALARME  *)
+(*******************************************************************)				
+	strArALARM : ARRAY [1..100] OF structAlarm;	
+	strArMSG : ARRAY [1..100] OF structAlarm;
+	xArAlarmHMI : ARRAY [1..9999] OF BOOL;
+	
+(*******************************************************************)
+(* ANZEIGE - Werte *)
+(*******************************************************************)
+
+(*******************************************************************)
+(* Cycle Time [STATION]*)
+(*******************************************************************)
+	dwArStartTime	: 	ARRAY[0..10] OF DWORD;
+	dwArCycleTime	: 	ARRAY[0..10] OF DWORD;
+	
+(*******************************************************************)
+(* Diverses *)
+(*******************************************************************)
+	xWriteALlog: BOOL;	//Alarmlog schreiben in File
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

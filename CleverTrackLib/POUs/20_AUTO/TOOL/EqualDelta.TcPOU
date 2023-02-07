@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="EqualDelta" Id="{5ee437d9-7e4b-411f-8b96-d74e25d3f03f}" SpecialFunc="None">
+    <Declaration><![CDATA[// Check if 2 lreal positions are equal, using a delta method
+// Please be sure that a and b stays aroud 0 because this function
+// depend on your floating point accuracy !
+// Always prefer IsPosEqualEpsilon when possible
+FUNCTION EqualDelta : BOOL
+VAR_INPUT
+    a     : LREAL; // first pos
+    b     : LREAL; // second pos
+    delta : LREAL; // if position is between ]+/-[ delta (not included) then return true
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[EqualDelta := (b < a+delta) AND (b>a-delta);]]></ST>
+    </Implementation>
+    <LineIds Name="EqualDelta">
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

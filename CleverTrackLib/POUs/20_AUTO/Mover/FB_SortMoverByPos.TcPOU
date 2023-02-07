@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_SortMoverByPos" Id="{3fd8fd2b-e1df-4cfe-bbd2-e923e9027a98}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SortMoverByPos EXTENDS FB_Sort
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Compare" Id="{230683ba-3804-4771-9d9e-47ab93ee1628}">
+      <Declaration><![CDATA[(* Please override this method so it returns:
+* 0 : a == b
+*-1 : a < b
+* 1 : a > b
+* which a and b are the ADDRESS of the 2 elements you want to compare
+*)
+METHOD Compare : DINT
+VAR_INPUT
+	a : PVOID;
+	b : PVOID;
+END_VAR
+VAR
+    MoverDict_a : MoverDict;
+    MoverDict_b : MoverDict;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Tc2_System.MEMCPY(ADR(MoverDict_a), a, SIZEOF(MoverDict));
+Tc2_System.MEMCPY(ADR(MoverDict_b), b, SIZEOF(MoverDict));
+
+IF MoverDict_a.MoverPos < MoverDict_b.MoverPos THEN
+    Compare := -1;
+
+ELSIF MoverDict_a.MoverPos > MoverDict_b.MoverPos THEN
+    Compare := 1;
+
+ELSE
+    Compare := 0;
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

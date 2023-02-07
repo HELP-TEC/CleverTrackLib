@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="F_GetPercent" Id="{49fa62f6-e827-436c-90e5-92aa67436379}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_GetPercent : INT
+VAR_INPUT
+    iAktStep   : INT; // actual step
+    iStepStart : INT; // step start
+    iStepDone  : INT; // step stop
+    iStepP1    : INT; // step process 1
+    iStepP2    : INT; // step process 2
+
+    uiStartProcessTimeMili : UDINT;
+    diProcessTimeDuration1 : DINT;
+    diProcessTimeDuration2 : DINT;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF iAktStep < iStepStart THEN
+    F_GetPercent := 0;
+ELSIF iStepDone = iAktStep THEN
+    F_GetPercent := 100;
+ELSE
+    // F_GetPercent := getPercent(iAktStep, TO_INT(iStepStart), TO_INT(caca.releaseMover) + 1);
+    IF diProcessTimeDuration1 > 0 AND diProcessTimeDuration2 > 0 THEN
+        IF iAktStep < iStepP1 THEN
+            F_GetPercent := 0;
+        ELSIF iAktStep > iStepP2 THEN
+            F_GetPercent := 100;
+        ELSIF iAktStep = iStepP1 THEN
+            F_GetPercent := TO_INT((TO_DINT(GetTick() - uiStartProcessTimeMili) * 50) / diProcessTimeDuration1);
+        ELSIF iAktStep = iStepP2 THEN
+            F_GetPercent :=
+                50 + TO_INT((TO_DINT(GetTick() - uiStartProcessTimeMili) * 50) / diProcessTimeDuration2);
+        ELSE
+            F_GetPercent := 50;
+        END_IF
+    ELSE
+        F_GetPercent := 0;
+    END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="F_GetPercent">
+      <LineId Id="91" Count="23" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

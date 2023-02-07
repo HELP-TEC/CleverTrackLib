@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="gMoverAxis" Id="{35610ea1-6634-4e72-a8f5-f0189fb4ec29}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    I_CT_Shuttle_from_BR AT %I* : CT_Shuttle_BR_to_Tc_u; // all the movers
+    Q_CT_Shuttle_to_BR   AT %Q* : CT_Shuttle_Tc_to_BR_u;
+    I_CT_Track_from_BR   AT %I* : CT_Track_BR_to_Tc_u;
+    Q_CT_Track_to_BR     AT %Q* : CT_Track_Tc_to_BR_u;
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

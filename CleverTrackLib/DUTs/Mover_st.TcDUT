@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="Mover_st" Id="{55ca19dd-7491-4eb4-80ac-b940143ff44b}">
+    <Declaration><![CDATA[TYPE Mover_st :
+STRUCT
+	iStation	: INT;	// Number of the assigned station
+	iPos		: INT;	// Current position
+	pPiece		: POINTER TO Piece_st;	// Pointer to a pieces
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

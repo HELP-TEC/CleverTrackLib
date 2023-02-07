@@ -1,0 +1,499 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_STATE" Id="{cfe9e5f5-08d6-451d-9325-eb42e8c79465}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_STATE
+VAR_INPUT
+	xIN_AutoInit: BOOL; 	// Automatisch Initialisieren
+	xIN_DoRef: BOOL;		// Referenzfahrt durchführen
+	xIN_ENERGIE: BOOL;		// Energiekreis
+	xIN_AIR: BOOL;			// Luftdruck IO
+	xIN_EINRICHTEN: BOOL;	// Schalter einrichten betätigt
+	xIN_AUTO: BOOL;			// Taste Automat
+	xIN_STEP: BOOL;			// Taste STEP	
+	xIN_CYCLE: BOOL;		// Taste Zyklusende
+	xIN_MANU: BOOL;			// Taste Manuell
+	xIN_INIT: BOOL;			// Taste Reset
+	xIN_LEER: BOOL;			// Taste Leerfahren
+	xIN_STOP: BOOL;			// Taste Stop
+	xIN_RefEND: BOOL;		// Referenzfahrt fertig
+	xIN_InitEND: BOOL;		// Initialisieren Fertig
+	xIN_ALARM: BOOL;		// Alarm aktiv
+	xIN_LastDone: BOOL;		// Letzter Schritt
+	xIN_WaitFBs: BOOL;		// Alle FBs warten
+END_VAR
+VAR_OUTPUT
+	enINOUT_State: enState;
+END_VAR
+VAR
+	x_DoInit: BOOL;			// Flag Autoinit
+	i_PreState: enState;	// Merke letzten Status
+	TON_PLCoff: TON;		// Warte nach Notaus
+	x_RefDone: BOOL;		// Referenzfahrt fertig
+	x_InitDone: BOOL;		// Initialisiert
+	rt_InitEnd: r_trig;		// Trigger initend
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//***********************************************************************************************)
+(* State - Machine  *)
+(***********************************************************************************************)
+TON_PLCoff(in:= enINOUT_State = StateOFF, PT := T#2S);
+rt_InitEnd(CLK:=xIN_InitEnd);
+CASE enINOUT_State OF
+
+	StateOFF:		(*	AUS	SPS am hochfahren oder NOT-AUS	*)
+					(**************************************************************)
+					(* Signale *)
+					x_DoInit := xIN_AutoInit;
+					IF NOT xIN_DoRef THEN
+						x_RefDone := TRUE;
+					END_IF
+
+					(* Status *)
+					IF  TON_PLCoff.Q AND NOT x_RefDone AND xIN_ENERGIE AND xIN_AIR AND xIN_INIT  THEN	
+						i_PreState := enINOUT_State;				(* -> REFERENZFAHRT *)
+						enINOUT_State 	:= StateREF;
+					END_IF;
+
+					IF  x_RefDone AND xIN_AIR THEN				(* -> ENERGIEFREI *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+					;
+	StateAIRon:		(*	ENERGIEFREI	(DRUCKLUFT OK)	*)
+					(**************************************************************)
+					(* Signale *)
+					x_DoInit := xIN_AutoInit;
+
+
+					(* Status *)
+					IF xIN_ENERGIE THEN							(* -> ENERGIZED *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateENGIZED;
+					END_IF;
+
+					IF xIN_MANU THEN							(* -> MANU *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateMANU;
+					END_IF;
+
+					IF NOT xIN_AIR THEN							(* <- AUS *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateENGIZED:	(*	ENERGIE OK	Energiekreis geschlossen	*)
+					(**************************************************************)
+					(* Signale *)
+
+
+
+					(* Status *)
+					IF  x_InitDone AND NOT x_DoInit  THEN
+						i_PreState := StateENGIZED;				(* -> READY *)
+						enINOUT_State 	:= StateREADY;
+					END_IF;
+
+					IF xIN_MANU THEN							(* -> MANU *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateMANU;
+					END_IF;
+
+					IF xIN_INIT OR (x_DoInit AND NOT xIN_EINRICHTEN) THEN
+						x_DoInit := FALSE;
+						x_InitDone := FALSE;
+						i_PreState := enINOUT_State;				(* -> INIT *)
+						enINOUT_State 	:= StateINIT;
+					END_IF;
+
+
+					IF NOT xIN_AIR  THEN						(* <- AUS *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+					;
+	StateREF:		(*	Referenzfahrt	*)
+					(**************************************************************)
+					(* Signale *)
+
+					(* Status *)
+					IF NOT xIN_AIR OR NOT xIN_ENERGIE THEN			(* <- AUS *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+
+					IF xIN_RefEND THEN								(* -> ENERGIZED *)
+						x_RefDone := TRUE;
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateENGIZED;
+					END_IF;
+					;
+	StateMANU:		(*	MANUELL	Manuellbetrieb (Bewegungen / Teach)	*)
+					(**************************************************************)
+					(* Signale *)
+					x_InitDone := FALSE;
+
+					(* Status *)
+					IF xIN_INIT AND xIN_ENERGIE THEN
+						i_PreState := enINOUT_State;					(* -> INIT *)
+						enINOUT_State 	:= StateINIT;
+					END_IF;
+
+					IF  xIN_MANU THEN								(* -> ENERGIZED *)
+							enINOUT_State 	:= StateENGIZED;
+							i_PreState := StateMANU;
+					END_IF;
+
+					IF NOT xIN_ENERGIE AND NOT xIN_EINRICHTEN THEN	
+						i_PreState := enINOUT_State;					(* <- ENERGIEFREI *)
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN								(* <- AUS *)
+						i_PreState := enINOUT_State;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateINIT	:	(*	INITIALISIERT	Anlage wird initialisiert	*)
+					(**************************************************************)
+					(* Signale *)
+
+
+					(* Status *)
+					IF  rt_initEnd.Q THEN
+						i_PreState := StateINIT;					(* -> READY *)
+						enINOUT_State 	:= StateREADY;
+					END_IF;
+
+					IF NOT xIN_ENERGIE OR xIN_STOP THEN				(* <- ENERGIEFREI *)
+						i_PreState := StateINIT;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN								(* <- AUS *)
+						i_PreState := StateINIT;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateREADY	:	(*	READY	Bereit für Automatikbetrieb	*)
+					(**************************************************************)
+					(* Signale *)
+
+
+					(* Status *)
+					IF xIN_MANU THEN								(* -> MANU *)
+						i_PreState := StateREADY;
+						enINOUT_State 	:= StateMANU;
+					END_IF;
+
+
+					IF xIN_INIT  THEN								(* -> INIT *)
+						x_DoInit := FALSE;
+						x_InitDone := FALSE;
+						i_PreState := StateREADY;	
+						enINOUT_State 	:= StateINIT;
+					END_IF;
+
+
+					IF xIN_ALARM THEN								(* -> ALARM *)
+						i_PreState := StateREADY;
+						enINOUT_State 	:= StateALARM;
+					END_IF;
+
+					IF xIN_STEP AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateREADY;					(* -> STEP *)
+						enINOUT_State 	:= StateSTEP;
+					END_IF;
+
+
+					IF xIN_CYCLE AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateREADY;					(* -> END *)
+						enINOUT_State 	:= StateEND;
+					END_IF;
+					
+					IF xIN_LEER AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateREADY;					(* -> LEERFAHREN *)
+						enINOUT_State 	:= StateLEER;
+					END_IF;
+
+
+					IF xIN_AUTO AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateREADY;					(* -> AUTO *)
+						enINOUT_State 	:= StateAUTO;
+					END_IF;
+
+					IF NOT xIN_ENERGIE OR xIN_STOP THEN				(* <- ENERGIEFREI *)
+						i_PreState := StateREADY;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN								(* <- AUS *)
+						i_PreState := StateREADY;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateSTOP	:	(*	STOP	Anlage gestoppt	(nicht verwendet) *)
+					(**************************************************************)
+					(* Signale *)
+					
+					enINOUT_State 	:= StateENGIZED; //NACH STOP MUSS INITIALISIERT WERDEN
+					(*
+					(* Status *)
+					IF btMANU THEN								(* -> MANU *)
+						iPreState := StateSTOP;
+						iState 	:= StateMANU;
+					END_IF;
+
+					IF btINIT THEN								(* -> INIT *)
+						bInitDone := FALSE;
+						iPreState := StateSTOP;	
+						iState 	:= StateINIT;
+					END_IF;
+
+					IF bALARM THEN								(* -> ALARM *)
+						iPreState := StateSTOP;
+						iState 	:= StateALARM;
+					END_IF;
+
+					IF btSTEP AND NOT bIN_EINRICHTEN THEN
+						iPreState := StateSTOP;					(* -> STEP *)
+						iState 	:= StateSTEP;
+					END_IF;
+
+					IF btCYCLE AND NOT bIN_EINRICHTEN THEN
+						iPreState := StateSTOP;					(* -> END *)
+						iState 	:= StateEND;
+					END_IF;
+
+					IF btAUTO AND NOT bIN_EINRICHTEN THEN
+						iPreState := StateSTOP;					(* -> AUTO *)
+						iState 	:= StateAUTO;
+					END_IF;
+
+					IF NOT bIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						iPreState := StateSTOP;
+						iState 	:= StateAIRon;
+					END_IF;
+
+					IF NOT bIN_AIR THEN							(* <- AUS *)
+						iPreState := StateSTOP;
+						iState 	:= StateOFF;
+					END_IF;
+					*)
+	
+					;
+	StateALARM	:	(*	ALARM	Anlage hat Störung	*)
+					(**************************************************************)
+					(* Signale *)
+
+
+					(* Status *)
+					IF xIN_MANU THEN							(* -> MANU *)
+						enINOUT_State 	:= StateMANU;
+					END_IF;
+
+					IF xIN_INIT THEN
+						i_PreState := StateSTOP;				(* -> INIT *)
+						enINOUT_State 	:= StateINIT;
+					END_IF;
+					
+					IF xIN_STOP THEN
+						i_PreState := StateALARM;				(* -> STOP *)
+						enINOUT_State 	:= StateSTOP;
+					END_IF;
+
+					IF NOT xIN_ALARM THEN						(* <------------*)
+						enINOUT_State 	:= i_PreState;
+						i_PreState := StateALARM;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN							(* <- AUS *)
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateSTEP	:	(*	STEP	Anlage im Stepbetrieb	*)
+					(**************************************************************)
+					(* Signale *)
+
+					(* Status *)
+					IF xIN_ALARM THEN							(* -> ALARM *)
+						i_PreState := StateSTEP;
+						enINOUT_State 	:= StateALARM;
+					END_IF;
+
+					IF  xIN_LastDone THEN
+						i_PreState := StateSTEP;				(* -> READY *)
+						enINOUT_State 	:= StateREADY;
+					END_IF;
+
+					IF xIN_STOP THEN
+						i_PreState := StateEND;					(* -> STOP *)
+						enINOUT_State 	:= StateSTOP;
+					END_IF;
+
+					IF xIN_INIT THEN
+						i_PreState := StateSTOP;				(* -> INIT *)
+						enINOUT_State 	:= StateINIT;
+					END_IF;
+
+					IF xIN_CYCLE AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateSTEP;				(* -> END *)
+						enINOUT_State 	:= StateEND;
+					END_IF;
+
+					IF xIN_AUTO AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateSTEP;				(* -> AUTO *)
+						enINOUT_State 	:= StateAUTO;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						i_PreState := StateSTEP;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN							(* <- AUS *)
+						i_PreState := StateSTEP;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;
+	StateEND	:	(*	BEENDEN	Anlage Fährt Zyklus fertig	*)
+					(**************************************************************)
+					(* Signale *)
+
+					(* Status *)
+					IF xIN_ALARM THEN							(* -> ALARM *)
+						i_PreState := StateEND;
+						enINOUT_State 	:= StateALARM;
+					END_IF;
+
+					IF xIN_LastDone THEN
+						i_PreState := StateEND;					(* -> READY *)
+						enINOUT_State 	:= StateREADY;
+					END_IF;
+
+					IF xIN_STOP THEN
+						i_PreState := StateEND;					(* -> STOP *)
+						enINOUT_State 	:= StateSTOP;
+					END_IF;
+
+					IF xIN_STEP AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateEND;					(* -> STEP *)
+						enINOUT_State 	:= StateSTEP;
+					END_IF;
+
+					IF xIN_AUTO AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateEND;					(* -> AUTO *)
+						enINOUT_State 	:= StateAUTO;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- AIRon *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN							(* <- AUS *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+
+					;					;
+	StateLEER	:	(*	LEERFAHREN	Anlage fährt leer	 *)
+					(**************************************************************)
+					(* Signale *)
+
+
+					(* Status *)
+					IF xIN_ALARM THEN							(* -> ALARM *)
+						i_PreState := StateLEER;
+						enINOUT_State 	:= StateALARM;
+					END_IF;
+
+					IF xIN_LastDone THEN
+						i_PreState := StateLEER;				(* -> READY *)
+						enINOUT_State 	:= StateREADY;
+					END_IF;
+
+					IF xIN_STOP THEN
+						i_PreState := StateLEER;				(* -> STOP *)
+						enINOUT_State 	:= StateSTOP;
+					END_IF;
+
+					IF xIN_STEP AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateLEER;				(* -> STEP *)
+						enINOUT_State 	:= StateSTEP;
+					END_IF;
+
+					IF xIN_CYCLE AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateLEER;				(* -> END *)
+						enINOUT_State 	:= StateEND;
+					END_IF;
+
+					IF	xIN_AUTO AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateLEER;				(* -> AUTO *)
+						enINOUT_State 	:= StateAUTO;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR  THEN						(* <- AUS *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+					;					;
+	StateAUTO	:	(*	RUN	Anlage läuft im Automatikbetrieb	*)
+					(**************************************************************)
+					(* Signale *)
+
+
+					(* Status *)
+					IF xIN_ALARM THEN							(* -> ALARM *)
+						i_PreState := StateAUTO;
+						enINOUT_State 	:= StateALARM;
+					END_IF;
+
+					IF xIN_STOP THEN
+						i_PreState := StateAUTO;				(* -> STOP *)
+						enINOUT_State 	:= StateSTOP;
+					END_IF;
+
+					IF xIN_STEP AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateAUTO;				(* -> STEP *)
+						enINOUT_State 	:= StateSTEP;
+					END_IF;
+
+					IF xIN_CYCLE AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateAUTO;				(* -> END *)
+						enINOUT_State 	:= StateEND;
+					END_IF;
+					
+					IF xIN_LEER AND NOT xIN_EINRICHTEN THEN
+						i_PreState := StateAUTO;				(* -> LEERFAHREN *)
+						enINOUT_State 	:= StateLEER;
+					END_IF;
+
+					IF NOT xIN_ENERGIE THEN						(* <- ENERGIEFREI *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateAIRon;
+					END_IF;
+
+					IF NOT xIN_AIR THEN							(* <- AUS *)
+						i_PreState := StateSTOP;
+						enINOUT_State 	:= StateOFF;
+					END_IF;
+		
+END_CASE]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

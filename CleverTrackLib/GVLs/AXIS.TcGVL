@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.18">
+  <GVL Name="AXIS" Id="{2d14d5ce-5619-433f-8b17-202cf8453dcf}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+(*******************************************************************)
+(* ACHSEN KONSTANTEN *)
+(*******************************************************************)
+VAR_GLOBAL CONSTANT
+	//Axis01X01
+	POSMIN_Axis01X1: REAL := 10;
+	POSMAX_Axis01X1: REAL := 410;
+	VELOMAX_Axis01X1: REAL := 750;
+	VELOMANU_Axis01X1: REAL := 30;
+	//Axis01Y02
+	POSMIN_Axis01Y2: REAL := 10;
+	POSMAX_Axis01Y2: REAL := 410;
+	VELOMAX_Axis01Y2: REAL := 750;
+	VELOMANU_Axis01Y2: REAL := 30;
+	//Axis01Z03
+	POSMIN_Axis01Z3: REAL := 10;
+	POSMAX_Axis01Z3: REAL := 410;
+	VELOMAX_Axis01Z3: REAL := 750;
+	VELOMANU_Axis01Z3: REAL := 30;
+	//Axis03W01
+	POSMIN_Axis02W1: REAL := 0;
+	POSMAX_Axis02W1: REAL := 360;
+	VELOMAX_Axis02W1: REAL := 750;
+	VELOMANU_Axis02W1: REAL := 30;
+END_VAR
+VAR_GLOBAL
+(*******************************************************************)
+(* ACHSEN Variablen *)
+(*******************************************************************)
+	//Axis Allgemein
+	rIncAxis		:	REAL;		//Axis Inching Wert
+	
+	//Axis01X1 -> Station01 X-Achse Achse #
+	Axis01X1		:	AXIS_REF;	// Referenz Axis01X01 
+	rActPos01X1		:	REAL;		// Aktuelle Position
+	btArAxis01X1   : 	ARRAY[0..7] OF structButton; (* Buttons AXIS
+                                                    0: Disable 
+                                                    1: Inching 
+                                                    2: Slow 
+                                                    3: Fast 
+                                                    4: Move Abs/Rel   
+                                                    5: Manu Move NEGATIVE
+                                                    6: Manu Move POSITIVE  
+													7: Start Homing *)
+	bInPos01X1		:	BYTE;		// Achse in Position (Teachpos)
+	bTeachPos01X1 	:	BYTE;		// Achse Teach Position (Anzufahrende Position)
+	
+													
+	//Axis01Y02												
+	Axis01Y2	:	AXIS_REF;		// Referenz Axis01Y02
+	rActPos01Y2	:	REAL;			// Aktuelle Position
+	btArAxis01Y2   : ARRAY[0..7] OF structButton; (* Buttons AXIS *)
+	bInPos01Y2		:	BYTE;		// Achse in Position (Teachpos)
+	bTeachPos01Y2 	:	BYTE;		// Achse Teach Position (Anzufahrende Position)
+	
+	//Axis01Z3
+	Axis01Z3	:	AXIS_REF;		// Referenz Axis01Z03
+	rActPos01Z3	:	REAL;			// Aktuelle Position
+	btArAxis01Z3   : ARRAY[0..7] OF structButton; (* Buttons AXIS *)
+	bInPos01Z3		:	BYTE;		// Achse in Position (Teachpos)
+	bTeachPos01Z3 	:	BYTE;		// Achse Teach Position (Anzufahrende Position)
+	
+	//Axis02W1
+	Axis02W1	:	AXIS_REF;		// Referenz Axis02W01
+	rActPos02W1	:	REAL;			// Aktuelle Position
+	btArAxis02W1   : ARRAY[0..7] OF structButton; (* Buttons AXIS *)
+	bInPos02W1		:	BYTE;		// Achse in Position (Teachpos)
+	bTeachPos02W1 	:	BYTE;		// Achse Teach Position (Anzufahrende Position)
+END_VAR
+
+(*******************************************************************)
+(* ACHSEN Positionen von HMI*)
+(*******************************************************************)	
+VAR_GLOBAL RETAIN
+	rArAxisPos01X1	:	ARRAY[0..10] OF REAL;	(*	0: REFERENZ
+													1: GET (ENTNEHMEN)
+													2: SET (ABLEGEN)
+												*)
+	rAxisVelo01X1	:	REAL;					//VELOCITY
+	rArAxisPos01Y2	:	ARRAY[0..10] OF REAL;	(*	0: REFERENZ
+													1: GET (ENTNEHMEN)
+													2: SET (ABLEGEN)
+												*)
+	rAxisVelo01Y2	:	REAL;					//VELOCITY
+	rArAxisPos01Z3	:	ARRAY[0..10] OF REAL;	(*	0: OBEN (REFERENZ)
+													1: GET (ENTNEHMEN)
+													2: SET (ABLEGEN)
+												*)
+	rAxisVelo01Z3	:	REAL;					//VELOCITY
+	rArAxisPos02W1	:	ARRAY[0..10] OF REAL;	(*	0: INDEXIEREN
+													1: PRESSEN1
+													2: PRESSEN2
+												*)
+	rAxisVelo02W1	:	REAL;					//VELOCITY
+													
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

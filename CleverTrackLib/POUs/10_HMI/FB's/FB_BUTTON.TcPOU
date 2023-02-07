@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.18">
+  <POU Name="FB_BUTTON" Id="{a7aa9593-cb24-4010-a500-0dce2c316519}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BUTTON
+VAR_INPUT
+	///Pointer Button-Variable
+	pbtIN: POINTER TO structButton;
+	///Button disable
+	xINdis: BOOL;
+	///Anzeige Grün
+	xINon: BOOL;
+	///Anzeige Rot
+	xINerr: BOOL;
+END_VAR
+VAR
+	rt: R_TRIG;
+	ft: F_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pbtIN^.disable := xINdis;
+IF pbtIN^.disable THEN
+	pbtIN^.button := FALSE;
+END_IF
+pbtIN^.press := pbtIN^.button AND NOT pbtIN^.disable;
+rt(CLK:= pbtIN^.press, Q=> pbtIN^.rtrig);
+ft(CLK:= pbtIN^.press, Q=> pbtIN^.ftrig);
+pbtIN^.on := xINon;
+pbtIN^.error := xINerr;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BUTTON">
+      <LineId Id="3" Count="7" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_StationMan" Id="{787a1804-0622-420f-bdc4-c4add9d38c58}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_StationMan IMPLEMENTS IObject
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+    // a null terminated array of working station
+    _WorkStationList : ARRAY[1..CONST.STATION_NUMBER] OF POINTER TO FB_Station;
+    _SelGroupList    : ARRAY[1..CONST.STATION_NUMBER] OF INT; // hold all station group number of selected station
+    _PieceHolder     : REFERENCE TO FB_PieceHolderMover;
+
+    _GroupList : ARRAY[1..CONST.MAX_GROUP] OF FB_Group;
+
+    _iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+END_VAR
+VAR_STAT
+    _iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="ApplyNewPath" Id="{b403c626-1b0b-435b-9123-ac8aeb1ca8f6}">
+      <Declaration><![CDATA[// Apply a given station set
+// This will build all the needed groups
+METHOD PUBLIC ApplyNewPath : BOOL
+VAR_INPUT
+    // The full station list of the application
+    StationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF FB_Station;
+    // Used to determine which station is used
+    SelStationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF INT;
+    PieceHolder    : REFERENCE TO FB_PieceHolderMover;
+END_VAR
+VAR
+    i                 : INT;
+    selStationCounter : INT := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO const.STATION_NUMBER BY 1 DO
+    IF SelStationList^[i] >= 0 THEN
+        THIS^._WorkStationList[selStationCounter] := ADR(StationList^[i]);
+        THIS^._SelGroupList[selStationCounter]    := SelStationList^[i];
+
+        selStationCounter := selStationCounter + 1;
+    END_IF
+END_FOR
+
+FOR selStationCounter := selStationCounter TO CONST.STATION_NUMBER BY 1 DO
+    THIS^._WorkStationList[selStationCounter] := 0;
+    THIS^._SelGroupList[selStationCounter]    := -1;
+END_FOR
+
+THIS^._PieceHolder REF= PieceHolder;
+THIS^.SetGroupMembers(StationList, SelStationList);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Equals" Id="{0a2ae969-8390-4a70-92c9-5554239fb998}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{64ae785c-3d76-4e13-ba79-3476306b3602}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode  : BOOL; // if TRUE, the instance afterwards gets moved into the copy code (online change)
+
+    // The full station list of the application
+    StationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF FB_Station;
+    // Used to determine which station is used
+    SelStationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF INT;
+    PieceHolder    : REFERENCE TO FB_PieceHolderMover;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID              := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter := THIS^._iInstanceCounter + 1;
+
+THIS^.ApplyNewPath(StationList, SelStationList, PieceHolder);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FindCloserStationIndex" Id="{8151016b-63dd-42aa-b7d3-6af6cd9bea25}">
+      <Declaration><![CDATA[// Return the closest station using the station position 
+// First we search if we are in range with our set of station
+// then, if no station are in our range, we give the nearest next
+// station
+METHOD PRIVATE FindCloserStationIndex : INT
+VAR_INPUT
+    CurrentPosition : LREAL;
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FindCloserStationIndex := -1;
+
+// First we check if we are not in range of a station from our set
+FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    IF 0 <> THIS^._WorkStationList[i] THEN
+        IF THIS^._WorkStationList[i]^.Position.isInPos(CurrentPosition) THEN
+            FindCloserStationIndex := i;
+            RETURN;
+        END_IF
+    END_IF
+END_FOR
+
+// Then, if no station are in the range, we give the most nearest station, if possible
+FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    IF 0 <> THIS^._WorkStationList[i] THEN
+        IF __ISVALIDREF(THIS^._WorkStationList[i]^.Position) AND
+           THIS^._WorkStationList[i]^.Position.lrWorkPosition > CurrentPosition THEN
+            FindCloserStationIndex := i;
+            EXIT;
+        END_IF
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNextStation" Id="{2ed58f98-af7e-4031-abff-0510c96756e7}">
+      <Declaration><![CDATA[// Return the next station to visit
+METHOD GetNextStation : REFERENCE TO FB_Station
+VAR_INPUT
+    CurrentStation : REFERENCE TO FB_Station;
+END_VAR
+VAR
+    CurrStationIndex : INT;
+	NextStationIndex : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GetNextStation   REF= CurrentStation;
+CurrStationIndex := THIS^.GetStationIndex(CurrentStation);
+NextStationIndex := CurrStationIndex;
+
+IF CurrStationIndex > 0 THEN
+
+    IF THIS^._SelGroupList[CurrStationIndex] > 0 THEN
+        // We search for a station which is not from the same group
+        WHILE THIS^._SelGroupList[CurrStationIndex] = THIS^._SelGroupList[NextStationIndex] DO
+			// We have to use NextStationIndex otherwise we stay with the 2 same
+			// station over and over again
+            NextStationIndex := THIS^.GetNextStationIndex(NextStationIndex);
+            GetNextStation   REF= THIS^._WorkStationList[NextStationIndex]^;
+        END_WHILE
+    ELSE
+        NextStationIndex := THIS^.GetNextStationIndex(CurrStationIndex);
+        GetNextStation   REF= THIS^._WorkStationList[NextStationIndex]^;
+    END_IF
+
+    // We take a look of the group member and then set the corresponding station
+    IF THIS^._SelGroupList[NextStationIndex] > 0 THEN
+        GetNextStation REF= THIS^._GroupList[THIS^._SelGroupList[NextStationIndex]].GetNextStation();
+    END_IF
+
+    // when the current is not on the list, we try to move to the nearest
+    // but only on the positive direction
+ELSE
+    CurrStationIndex := THIS^.FindCloserStationIndex(CurrentStation.Position.lrWorkPosition);
+
+    IF CurrStationIndex > 0 THEN
+        GetNextStation REF= THIS^._WorkStationList[CurrStationIndex]^;
+
+    ELSE
+        GetNextStation REF= THIS^._WorkStationList[1]^;
+
+    END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNextStationIndex" Id="{100881ea-c6f6-4ecd-afe5-0d0ba8e3b55e}">
+      <Declaration><![CDATA[// Return the next station index in the ring buffer of station
+METHOD PRIVATE GetNextStationIndex : INT
+VAR_INPUT
+	CurrStationIndex : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF CurrStationIndex >= CONST.STATION_NUMBER THEN
+    GetNextStationIndex := 1;
+
+ELSIF THIS^._WorkStationList[CurrStationIndex + 1] = 0 THEN
+    GetNextStationIndex := 1;
+
+ELSE
+    GetNextStationIndex := CurrStationIndex + 1;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNextStationWithProcess" Id="{d48a3920-f30a-4e54-8867-2d1a2598114f}">
+      <Declaration><![CDATA[// Get the next station with a valid process. If nothing is found, we 
+// simply return to the first station (this should be never the case
+// since your machine will be useless...)
+METHOD GetNextStationWithProcess : REFERENCE TO FB_Station
+VAR_INPUT
+    CurrentStation : REFERENCE TO FB_Station;
+END_VAR
+VAR
+    // search station with process algorithme
+    iSearchNext        : INT; // incremtal variable used to search in a set of next station
+    iTempSearchStation : INT; // incremtal variable used to search in a set of next station
+    tempStation        : REFERENCE TO FB_Station;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// If nothing found, we return to the first station
+GetNextStationWithProcess REF= THIS^._WorkStationList[1]^;
+
+IF __ISVALIDREF(CurrentStation) THEN
+    iSearchNext := 1;
+
+    WHILE iSearchNext < CONST.STATION_NUMBER DO
+        tempStation REF= THIS^.GetNextStation(CurrentStation);
+
+        IF __ISVALIDREF(tempStation) AND_THEN __ISVALIDREF(tempStation.Process) THEN
+            GetNextStationWithProcess REF= tempStation;
+            EXIT;
+        END_IF
+
+        iSearchNext := iSearchNext + 1;
+
+    END_WHILE
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetStartStation" Id="{cff5468b-6105-4106-80d3-aa8f4d75068f}">
+      <Declaration><![CDATA[METHOD GetStartStation : POINTER TO FB_Station
+VAR_INPUT
+    CurrentPosition : LREAL;
+END_VAR
+VAR
+    CurrStationIndex : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//GetStartStation := THIS^._WorkStationList[1];
+CurrStationIndex := THIS^.FindCloserStationIndex(CurrentPosition);
+
+IF CurrStationIndex > 0 THEN
+    GetStartStation := THIS^._WorkStationList[CurrStationIndex];
+
+ELSE
+    GetStartStation := THIS^._WorkStationList[1];
+
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetStationIndex" Id="{85063772-9095-4848-ac42-253ca705c6c9}">
+      <Declaration><![CDATA[// return the index of a given station, If the index is -1, no station where found
+METHOD PRIVATE GetStationIndex : INT
+VAR_INPUT
+    Station : REFERENCE TO FB_Station;
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GetStationIndex := -1;
+
+FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    IF Station.Equals(THIS^._WorkStationList[i]^) THEN
+        GetStationIndex := i;
+        EXIT;
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsProcessUsed" Id="{69372d72-88ea-42d0-bb1a-53a982b75346}">
+      <Declaration><![CDATA[METHOD IsProcessUsed : BOOL
+VAR_INPUT
+	process : REFERENCE TO FB_AUT_ABSTRACT;
+END_VAR
+VAR
+	i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+	IF (0 <> THIS^._WorkStationList[i]) AND_THEN __ISVALIDREF(THIS^._WorkStationList[i]^.Process) THEN
+		IF THIS^._WorkStationList[i]^.Process.Equals(process) THEN
+			IsProcessUsed := TRUE;
+			EXIT; 
+		END_IF
+	END_IF
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="PieceHolder" Id="{cc0c7075-048b-4fed-be14-c674547be8b4}">
+      <Declaration><![CDATA[PROPERTY PieceHolder : REFERENCE TO FB_PieceHolderMover]]></Declaration>
+      <Get Name="Get" Id="{2534e06d-8fce-4520-8272-b345edc96ad7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[PieceHolder REF= _PieceHolder;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{10d22f5d-c5d9-48d7-b427-b1879552402b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_PieceHolder REF= PieceHolder;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="SetGroupMembers" Id="{e540b47a-ce8d-4c79-a6fa-fc50077691ae}">
+      <Declaration><![CDATA[METHOD SetGroupMembers : REFERENCE TO FB_Group
+VAR_INPUT
+    // The full station list of the application
+    StationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF FB_Station;
+    SelStationList : POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF INT;
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    IF SelStationList^[i] > 0 AND SelStationList^[i] <= CONST.MAX_GROUP THEN
+        THIS^._GroupList[SelStationList^[i]].AddStation(StationList^[i]);
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ToString" Id="{d4e4d550-3cea-448d-beac-20fe7eef4748}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_StationMan_', TO_STRING(THIS^._iID));
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

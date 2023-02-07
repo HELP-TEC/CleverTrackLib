@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.18">
+  <POU Name="_05_FLAGS" Id="{55eeaa85-1eb4-4842-b105-d90f94beefba}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM _05_FLAGS
+(****************************************************************************)
+//FLAGS PROGRAMM
+//	- Diverse Allgemeine Signale
+//
+//	04.09.2019/Dj
+//
+//	Version:
+(****************************************************************************)
+VAR_INPUT
+	xIN_AIR			: 	BOOL;				//Luftdruck
+	xIN_btRES_TEMP	:	structButton;		//BUTTON ResetCounter
+END_VAR
+VAR
+	TOF_AirOFF		: 	TOF;				//Air NIO
+	TON_btReset		:	TON;				//Reset Taste gedrückt
+	
+    _FB_Lampe		:   FB_LampeBNI007F;	//Lampe Balluf BN007F
+	
+	_FB_btRESET		: 	FB_BUTTON;			//Reset Temp Counter
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//--------------------------------------------------------------------------
+//Air ON
+//--------------------------------------------------------------------------
+TOF_AirOFF(IN:=xIN_AIR , PT:=T#500MS);
+HMI.xAIRon	:= TOF_AirOFF.Q;
+
+//--------------------------------------------------------------------------
+//Reset Counter	
+//--------------------------------------------------------------------------
+//Button
+_FB_btRESET(pbtIN:= ADR(xIN_btRES_TEMP),
+	xINdis:= FALSE, 
+	xINon:= (PERS.udiTempNOK=0) AND (PERS.udiTempOK=0), 
+	xINerr:= FALSE);
+TON_btReset(IN:=xIN_btRES_TEMP.press, PT:=T#1.5S);
+//Reset
+IF TON_btReset.Q THEN
+	PERS.udiTempNOK:=0;
+	PERS.udiTempOK:=0;
+END_IF
+
+//--------------------------------------------------------------------------
+//Flanken
+//--------------------------------------------------------------------------
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="_05_FLAGS">
+      <LineId Id="728" Count="4" />
+      <LineId Id="896" Count="0" />
+      <LineId Id="743" Count="2" />
+      <LineId Id="916" Count="2" />
+      <LineId Id="921" Count="0" />
+      <LineId Id="915" Count="0" />
+      <LineId Id="898" Count="0" />
+      <LineId Id="920" Count="0" />
+      <LineId Id="746" Count="2" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="855" Count="3" />
+      <LineId Id="879" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

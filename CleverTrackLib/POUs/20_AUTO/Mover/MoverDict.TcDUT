@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="MoverDict" Id="{7f7fe4fe-bb01-4e0d-a424-36b050df06f3}">
+    <Declaration><![CDATA[// Get information from a mover using this structure
+TYPE MoverDict :
+STRUCT
+    MoverNum : INT;
+    MoverPos : LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

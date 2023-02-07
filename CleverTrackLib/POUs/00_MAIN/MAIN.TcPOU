@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="MAIN" Id="{dba9db14-aa7f-405f-8447-2b4bbb3b30dd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	MoverMan	: FB_MoverMan;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+_05_FLAGS( xIN_AIR:=TRUE, xIN_btRES_TEMP:=HMI.btArMain[8]);
+
+//HMI
+_10_HMI();
+
+MoverMan();
+
+//AUTO
+_20_AUTO(xIN_Quit:= _14_STATE._FB_btQUIT.pbtIN^.rtrig , enIN_State:= HMI.enState);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="8" Count="4" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

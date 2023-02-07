@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ProcessExec_e" Id="{23a6662d-9144-4a13-83a7-1227e92b8661}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE ProcessExec_e :
+(
+	StartImmediately,
+	StartSynchronize,
+	_MAX
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

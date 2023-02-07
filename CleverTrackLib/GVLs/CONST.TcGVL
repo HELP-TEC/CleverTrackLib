@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="CONST" Id="{9b3680ca-efd7-44b5-8e7f-6ff4b0673f03}">
+    <Declaration><![CDATA[{attribute 'qualified_only' := ''}
+VAR_GLOBAL CONSTANT
+    (*******************************************************************)
+    (* Globale KONSTANTEN *)
+    (*******************************************************************)
+
+    USE_SIMULATION  : BOOL := TRUE;
+    BIND_WITH_TRACK : BOOL := FALSE;
+
+    STATION_NUMBER        : INT   := 18;
+    MAX_GROUP             : INT   := 6;
+    MAX_STATION_PER_GROUP : INT   := 8;
+    RECIPE_NUMBER         : INT   := 4;
+    MAX_TRACK_LENGTH      : LREAL := 10000;
+    MAX_MOVER_SIZE        : LREAL := 200.0;
+
+    MOVER_NUMBER : INT := 18;
+
+    MAX_TRACK_OFFSET_LIST  : INT := 10;
+    MAX_RECIPE_PER_STATION : INT := 10;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

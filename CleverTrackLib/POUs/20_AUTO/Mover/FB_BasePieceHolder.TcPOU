@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_BasePieceHolder" Id="{a914e1f5-da13-4b28-82d8-b2b92e0b5be4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BasePieceHolder
+VAR
+    _Usable : BOOL := TRUE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Equals" Id="{d050dfad-463d-4226-bfc9-3ebeaf2a13b0}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Usable" Id="{7855e544-ef20-4e89-b20f-f4776d70fc97}">
+      <Declaration><![CDATA[PROPERTY PUBLIC Usable : BOOL]]></Declaration>
+      <Get Name="Get" Id="{f904348c-74da-4bbd-88db-8a2063ccf759}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Usable := THIS^._Usable;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{35ce39aa-a1a9-4bfb-b8a8-86d265e7e6a4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._Usable := Usable;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+  </POU>
+</TcPlcObject>

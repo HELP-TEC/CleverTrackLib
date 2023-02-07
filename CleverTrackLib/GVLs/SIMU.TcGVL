@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <GVL Name="SIMU" Id="{345b4519-5ad6-46f0-ab8f-5a823ebcb6f9}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    iCompletionHMI : ARRAY[0..CONST.STATION_NUMBER] OF INT;
+
+    lrSpeedMover       : LREAL := 20.0;
+    lrAccelMover       : LREAL; // is lrAccelMoverSlider^2
+    lrAccelMoverSlider : LREAL := 0.4;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

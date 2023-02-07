@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="getPercent" Id="{d3e00c21-3be2-49a2-9767-12208a2c98d7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION getPercent : INT
+VAR_INPUT
+    inAct : INT; // actual valuelue
+    inMin : INT; // minimum value
+    inMax : INT; // maximum possible va
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[getPercent := ((inAct - inMin) * 100) / (inMax - inMin);
+]]></ST>
+    </Implementation>
+    <LineIds Name="getPercent">
+      <LineId Id="25" Count="0" />
+      <LineId Id="22" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

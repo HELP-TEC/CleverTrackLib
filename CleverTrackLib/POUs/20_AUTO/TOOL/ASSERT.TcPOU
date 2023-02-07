@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="ASSERT" Id="{21fac669-7d2d-4869-91aa-276366a54f2e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION ASSERT : BOOL
+VAR_INPUT
+    bStatement : BOOL; // Should be true, else raise an error
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT  bStatement THEN
+	{error <'Assertion has occured'>}
+	ASSERT := TRUE;
+ELSE
+	ASSERT := FALSE;
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

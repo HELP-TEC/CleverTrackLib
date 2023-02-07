@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Station" Id="{70468013-f9f1-48d7-8a41-9e3de9ebad9e}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'reflection'}
+FUNCTION_BLOCK FB_Station IMPLEMENTS IStation, IObject
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+    _Position          : REFERENCE TO FB_Position;
+    _Process           : REFERENCE TO FB_AUT_ABSTRACT;
+    _WaitPosOffset     : LREAL; // offset of the station position, should always be negative
+    _iMaxWaitingMovers : INT;   // Maximum of waiting mover in front of the station
+    _iGroupNumber      : INT;   // The current group member
+    _lrOffset          : LREAL; // offset position of this station for a given recipe
+    _bSuperTrackNumber : BYTE;  // target number in superTrack
+
+    _ApproachScenario : ApproachScenario_e := ApproachScenario_e.WaitOnFinishedProcess;
+
+    _iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+END_VAR
+VAR_STAT
+    _iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Property Name="ApproachScenario" Id="{7af8662f-299f-4992-b910-3a98e1ea7f68}">
+      <Declaration><![CDATA[PROPERTY ApproachScenario : ApproachScenario_e]]></Declaration>
+      <Get Name="Get" Id="{1e543aa0-4bf9-42e8-940f-25810da7807f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ApproachScenario := THIS^._ApproachScenario;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e2d8175a-d65d-404d-9515-d955dd39fe95}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._ApproachScenario := ApproachScenario;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Equals" Id="{8533c6eb-957c-422e-872a-afb3d6aaedc0}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{79a4bdc5-c74e-4221-9bda-a7d762e9f476}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains      : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode       : BOOL; // if TRUE, the instance afterwards gets moved into the copy code (online change)
+    Position          : REFERENCE TO FB_Position;
+    Process           : REFERENCE TO FB_AUT_ABSTRACT;
+    WaitPosOffset     : LREAL;
+    ApproachScenario  : ApproachScenario_e;
+    iMaxWaitingMovers : INT;
+	bSuperTrackNumber : BYTE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID               := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter  := THIS^._iInstanceCounter + 1;
+THIS^._Position          REF= Position;
+THIS^._Process           REF= Process;
+THIS^._WaitPosOffset     := WaitPosOffset;
+THIS^._ApproachScenario  := ApproachScenario;
+THIS^._iMaxWaitingMovers := iMaxWaitingMovers;
+THIS^._bSuperTrackNumber := bSuperTrackNumber;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="iMaxWaitingMovers" Id="{546a0cb8-d5d0-4609-a889-24ff44d0a25e}">
+      <Declaration><![CDATA[// the maxuimum number of waiting movers at the front of the station
+PROPERTY iMaxWaitingMovers : INT]]></Declaration>
+      <Get Name="Get" Id="{4718007c-6aa3-4b8c-8d42-153f81de44ba}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[iMaxWaitingMovers := THIS^._iMaxWaitingMovers;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{3ce85e75-a23d-47db-9068-e9fc275ba4d2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._iMaxWaitingMovers := iMaxWaitingMovers;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Offset" Id="{0f5c0952-f6ae-4ee6-a98e-3ef72644cd22}">
+      <Declaration><![CDATA[PROPERTY PUBLIC Offset : LREAL]]></Declaration>
+      <Get Name="Get" Id="{a2b591ed-26cc-4237-a108-b54e2e588ae0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Offset := THIS^._lrOffset;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e6b836b5-2768-4f08-a3fe-d5e742cff61f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._lrOffset := Offset;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Position" Id="{b6ed5e54-2fb9-44f3-99fb-44d690ace79e}">
+      <Declaration><![CDATA[PROPERTY Position : REFERENCE TO FB_Position
+]]></Declaration>
+      <Get Name="Get" Id="{d57d7b2c-d047-4546-b08e-9f2b19da1c3b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Position REF=_Position;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{8ec541f4-51cc-47f8-8d1c-bda0126f4084}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Position REF=Position;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Process" Id="{593b9bcf-49e5-4201-a417-8a170114a5c6}">
+      <Declaration><![CDATA[PROPERTY Process : REFERENCE TO FB_AUT_ABSTRACT]]></Declaration>
+      <Get Name="Get" Id="{9be8e146-1278-4d03-b2c3-cc913e6cc63d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Process REF=_Process; ]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{0b3f8467-e46f-497e-b2d6-a49d47d1d3ba}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Process REF= Process;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="SetWaitPosOffset" Id="{e4c044ad-097c-49d2-be32-46dd34cbd590}">
+      <Declaration><![CDATA[METHOD SetWaitPosOffset : REFERENCE TO FB_Station
+VAR_INPUT
+	WaitPosOffset : LREAL; // offset position from the given station, must be negative
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF _WaitPosOffset < 0 THEN
+    _WaitPosOffset := WaitPos;
+END_IF
+
+SetWaitPosOffset REF= THIS^;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="SuperTrackNumber" Id="{48708baa-3e61-4dbb-9ae9-95a95949b98d}">
+      <Declaration><![CDATA[PROPERTY SuperTrackNumber : BYTE]]></Declaration>
+      <Get Name="Get" Id="{708941da-5b74-4ce8-aea6-ab99c1baa276}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[SuperTrackNumber := THIS^._bSuperTrackNumber;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="ToString" Id="{efefe0e5-d9df-4b18-a791-065ec8f343b5}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR
+VAR_INST
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_Station_', TO_STRING(THIS^._iID));]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="WaitPos" Id="{8969891e-6d5a-4788-abdc-d61b00c916a8}">
+      <Declaration><![CDATA[PROPERTY PUBLIC WaitPos : LREAL]]></Declaration>
+      <Get Name="Get" Id="{4b1069d2-41b4-4948-8a2f-7c112e876a7c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[WaitPos := _WaitPosOffset + this^._Position.lrWorkPosition;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{0501bd4d-6f15-4e80-9d24-a4a4472e0372}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF WaitPos < THIS^._Position.lrWorkPosition THEN
+    _WaitPosOffset := WaitPos - THIS^._Position.lrWorkPosition;
+END_IF
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+  </POU>
+</TcPlcObject>

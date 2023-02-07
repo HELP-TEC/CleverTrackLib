@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="_14_STATE" Id="{c95d7638-51ff-4919-9f91-365eb2425efb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM _14_STATE
+(****************************************************************************)
+//STATE PROGRAMM
+//	- Control Buttons
+//	- Status Anlage
+//
+//	05.09.2019/Dj
+//
+//	Version:
+(****************************************************************************)
+VAR
+    fb_State        :   FB_State;       //Status der Maschine
+	sStateDbg		: STRING;		// enState but in string format
+		
+	//Control Buttons
+	_FB_btAUTO	: FB_BUTTON;
+	_FB_btSTEP	: FB_BUTTON;
+	_FB_btEND	: FB_BUTTON;
+	_FB_btMANU	: FB_BUTTON;
+	_FB_btINIT	: FB_BUTTON;
+	_FB_btSTOP	: FB_BUTTON;
+	_FB_btLEER	: FB_BUTTON;
+	_FB_btQUIT	: FB_BUTTON;
+	_FB_btSTART	: FB_BUTTON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//****************************************************************************
+// 	CONTROL BUTTONS
+//****************************************************************************
+//	AUTO 
+_FB_btAUTO(pbtIN  := ADR(HMI.btArMain[0]),
+           xINdis := (HMI.enState < enState.StateREADY),
+           xINon  := (HMI.enState = enState.StateAUTO),
+           xINerr := FALSE);
+
+//STEP
+_FB_btSTEP(pbtIN  := ADR(HMI.btArMain[1]),
+           xINdis := (HMI.enState < enState.StateREADY),
+           xINon  := (HMI.enState = enState.StateSTEP),
+           xINerr := FALSE);
+
+//END
+_FB_btEND(pbtIN  := ADR(HMI.btArMain[2]),
+          xINdis := (HMI.enState < enState.StateREADY),
+          xINon  := (HMI.enState = enState.StateEND),
+          xINerr := FALSE);
+
+//MANU
+_FB_btMANU(pbtIN  := ADR(HMI.btArMain[3]),
+           xINdis := (HMI.enState > enState.StateSTEP) OR
+                     (HMI.enState = enState.StateALARM) OR
+                     (HMI.enState < enState.StateAIRon),
+           xINon  := (HMI.enState = enState.StateMANU),
+           xINerr := FALSE);
+
+//INIT
+_FB_btINIT(pbtIN  := ADR(HMI.btArMain[4]),
+           xINdis := (HMI.enState < enState.StateENGIZED),
+           xINon  := (HMI.enState = enState.StateINIT),
+           xINerr := FALSE);
+
+//STOP
+_FB_btSTOP(pbtIN  := ADR(HMI.btArMain[5]),
+           xINdis := (HMI.enState < enState.StateENGIZED),
+           xINon  := FALSE,
+           xINerr := FALSE);
+
+//LEERFAHREN
+_FB_btLEER(pbtIN  := ADR(HMI.btArMain[6]),
+           xINdis := FALSE,
+           xINon  := FALSE,
+           xINerr := FALSE);
+
+//QUIT
+_FB_btQUIT(pbtIN  := ADR(HMI.btArMain[7]),
+           xINdis := FALSE,
+           xINon  := FALSE,
+           xINerr := HMI.xAlarm);
+
+//START
+_FB_btSTART(pbtIN  := ADR(HMI.btArMain[9]),
+            xINdis := HMI.enState < enState.StateREADY,
+            xINon  := HMI.btArMain[9].on,
+            xINerr := FALSE);
+
+//****************************************************************************
+// 	STATE FB
+//****************************************************************************
+fb_State(xIN_AutoInit   := TRUE,
+         xIN_DoRef      := FALSE,
+         xIN_ENERGIE    := TRUE,
+         xIN_AIR        := HMI.xAIRon,
+         xIN_EINRICHTEN :=,
+         xIN_AUTO       := HMI.btArMain[0].rtrig,
+         xIN_STEP       := HMI.btArMain[1].rtrig,
+         xIN_CYCLE      := HMI.btArMain[2].rtrig,
+         xIN_MANU       := HMI.btArMain[3].rtrig,
+         xIN_INIT       := HMI.btArMain[4].rtrig,
+         xIN_STOP       := HMI.btArMain[5].rtrig,
+         xIN_LEER       := HMI.btArMain[6].rtrig,
+         xIN_InitEND    := PRG.st105_aut.xOUT_InitDone AND
+                           PRG.st110_aut.xOUT_InitDone AND
+                           PRG.st115_aut.xOUT_InitDone AND
+                           PRG.st120_aut.xOUT_InitDone AND
+                           PRG.st125_aut.xOUT_InitDone AND
+                           PRG.st130_aut.xOUT_InitDone AND
+                           PRG.st135_aut.xOUT_InitDone AND
+                           PRG.st140_aut.xOUT_InitDone AND
+                           PRG.st145_aut.xOUT_InitDone AND
+                           PRG.st150_aut.xOUT_InitDone AND
+                           PRG.st155_aut.xOUT_InitDone AND
+                           PRG.st160_aut.xOUT_InitDone AND
+                           PRG.st165_aut.xOUT_InitDone AND
+                           PRG.st170_aut.xOUT_InitDone AND
+                           PRG.st175_aut.xOUT_InitDone AND
+                           PRG.st176_aut.xOUT_InitDone AND
+                           PRG.st180_aut.xOUT_InitDone AND
+                           PRG.st185_aut.xOUT_InitDone,
+         xIN_ALARM := PRG.st105_aut.xOUT_ErrFlag AND
+                      PRG.st110_aut.xOUT_errFlag AND
+                      PRG.st115_aut.xOUT_errFlag AND
+                      PRG.st120_aut.xOUT_errFlag AND
+                      PRG.st125_aut.xOUT_errFlag AND
+                      PRG.st130_aut.xOUT_errFlag AND
+                      PRG.st135_aut.xOUT_errFlag AND
+                      PRG.st140_aut.xOUT_errFlag AND
+                      PRG.st145_aut.xOUT_errFlag AND
+                      PRG.st150_aut.xOUT_errFlag AND
+                      PRG.st155_aut.xOUT_errFlag AND
+                      PRG.st160_aut.xOUT_errFlag AND
+                      PRG.st165_aut.xOUT_errFlag AND
+                      PRG.st170_aut.xOUT_errFlag AND
+                      PRG.st175_aut.xOUT_errFlag AND
+                      PRG.st176_aut.xOUT_errFlag AND
+                      PRG.st180_aut.xOUT_errFlag AND
+                      PRG.st185_aut.xOUT_errFlag AND
+                      (PRG.st105_aut.xOUT_ErrFlag OR PRG.st105_aut.xOUT_wait) AND
+                      (PRG.st110_aut.xOUT_errFlag OR PRG.st110_aut.xOUT_wait) AND
+                      (PRG.st115_aut.xOUT_errFlag OR PRG.st115_aut.xOUT_wait) AND
+                      (PRG.st120_aut.xOUT_errFlag OR PRG.st120_aut.xOUT_wait) AND
+                      (PRG.st125_aut.xOUT_errFlag OR PRG.st125_aut.xOUT_wait) AND
+                      (PRG.st130_aut.xOUT_errFlag OR PRG.st130_aut.xOUT_wait) AND
+                      (PRG.st135_aut.xOUT_errFlag OR PRG.st135_aut.xOUT_wait) AND
+                      (PRG.st140_aut.xOUT_errFlag OR PRG.st140_aut.xOUT_wait) AND
+                      (PRG.st145_aut.xOUT_errFlag OR PRG.st145_aut.xOUT_wait) AND
+                      (PRG.st150_aut.xOUT_errFlag OR PRG.st150_aut.xOUT_wait) AND
+                      (PRG.st155_aut.xOUT_errFlag OR PRG.st155_aut.xOUT_wait) AND
+                      (PRG.st160_aut.xOUT_errFlag OR PRG.st160_aut.xOUT_wait) AND
+                      (PRG.st165_aut.xOUT_errFlag OR PRG.st165_aut.xOUT_wait) AND
+                      (PRG.st170_aut.xOUT_errFlag OR PRG.st170_aut.xOUT_wait) AND
+                      (PRG.st175_aut.xOUT_errFlag OR PRG.st175_aut.xOUT_wait) AND
+                      (PRG.st176_aut.xOUT_errFlag OR PRG.st176_aut.xOUT_wait) AND
+                      (PRG.st180_aut.xOUT_errFlag OR PRG.st180_aut.xOUT_wait) AND
+                      (PRG.st185_aut.xOUT_errFlag OR PRG.st185_aut.xOUT_wait),
+         xIN_LastDone := (PRG.st105_aut.xOUT_Done OR PRG.st105_aut.xout_InitDone) AND
+                         (PRG.st110_aut.xOUT_Done OR PRG.st110_aut.xout_InitDone) AND
+                         (PRG.st115_aut.xOUT_Done OR PRG.st115_aut.xout_InitDone) AND
+                         (PRG.st120_aut.xOUT_Done OR PRG.st120_aut.xout_InitDone) AND
+                         (PRG.st125_aut.xOUT_Done OR PRG.st125_aut.xout_InitDone) AND
+                         (PRG.st130_aut.xOUT_Done OR PRG.st130_aut.xout_InitDone) AND
+                         (PRG.st135_aut.xOUT_Done OR PRG.st135_aut.xout_InitDone) AND
+                         (PRG.st140_aut.xOUT_Done OR PRG.st140_aut.xout_InitDone) AND
+                         (PRG.st145_aut.xOUT_Done OR PRG.st145_aut.xout_InitDone) AND
+                         (PRG.st150_aut.xOUT_Done OR PRG.st150_aut.xout_InitDone) AND
+                         (PRG.st155_aut.xOUT_Done OR PRG.st155_aut.xout_InitDone) AND
+                         (PRG.st160_aut.xOUT_Done OR PRG.st160_aut.xout_InitDone) AND
+                         (PRG.st165_aut.xOUT_Done OR PRG.st165_aut.xout_InitDone) AND
+                         (PRG.st170_aut.xOUT_Done OR PRG.st170_aut.xout_InitDone) AND
+                         (PRG.st175_aut.xOUT_Done OR PRG.st175_aut.xout_InitDone) AND
+                         (PRG.st176_aut.xOUT_Done OR PRG.st176_aut.xout_InitDone) AND
+                         (PRG.st180_aut.xOUT_Done OR PRG.st180_aut.xout_InitDone) AND
+                         (PRG.st185_aut.xOUT_Done OR PRG.st185_aut.xout_InitDone),
+         xIN_WaitFBs := PRG.st105_aut.xOUT_Wait OR
+                        PRG.st110_aut.xOUT_Wait OR
+                        PRG.st115_aut.xOUT_Wait OR
+                        PRG.st120_aut.xOUT_Wait OR
+                        PRG.st125_aut.xOUT_Wait OR
+                        PRG.st130_aut.xOUT_Wait OR
+                        PRG.st135_aut.xOUT_Wait OR
+                        PRG.st140_aut.xOUT_Wait OR
+                        PRG.st145_aut.xOUT_Wait OR
+                        PRG.st150_aut.xOUT_Wait OR
+                        PRG.st155_aut.xOUT_Wait OR
+                        PRG.st160_aut.xOUT_Wait OR
+                        PRG.st165_aut.xOUT_Wait OR
+                        PRG.st170_aut.xOUT_Wait OR
+                        PRG.st175_aut.xOUT_Wait OR
+                        PRG.st176_aut.xOUT_Wait OR
+                        PRG.st180_aut.xOUT_Wait OR
+                        PRG.st185_aut.xOUT_Wait,
+         enINOUT_State => HMI.enState);
+
+sStateDbg := TO_STRING(HMI.enState);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

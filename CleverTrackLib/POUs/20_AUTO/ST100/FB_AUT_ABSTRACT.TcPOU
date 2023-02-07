@@ -1,0 +1,274 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_AUT_ABSTRACT" Id="{e9f820e2-63e4-4738-93a0-905f1e9dea0a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK PUBLIC FB_AUT_ABSTRACT IMPLEMENTS IProcessSampleMover
+    (****************************************************************************)
+    (*	POU_AUT_zxx			Bausteinaufrufe Station	zxx							*)
+    (*	Status				ungetestet											*)
+    (*  Version:			1.0													*)
+    (*	Beschrieb:																*)
+    (*																			*)
+    (*	Abläufe:			FB_ABLzxxA		Hauptablauf							*)
+    (*																			*)
+    (*																			*)
+    (* 	25.09.2019/Dj															*)
+    (****************************************************************************)
+    (*	dd.mm.yyyy   KZ    x.y			Beschrieb								*)
+    (****************************************************************************)
+VAR_INPUT
+    (* standart Eingänge *)
+    xIN_Init       : BOOL;    // Initialisieren	
+    xIN_Quit       : BOOL;    // Fehler quittieren 
+    xIN_Start      : BOOL;    // Schrittkette Starten
+    xIN_Step       : BOOL;    // Schrittkette Starten/Nachster Schritt
+    xIN_ManuCycle  : BOOL;    // Zylus Manuell Starten
+    xIN_AlarmAktiv : BOOL;    // Alarm aktiv 
+    xIN_DryCycle   : BOOL;    // Fahren ohne Teile 
+    enIN_State     : enState; // Status Anlage/Zelle 
+    tIN_Timeout    : TIME;    // Timout 
+    xIN_On         : BOOL;    // Station eingeschaltet 
+
+    (* spezifische Eingänge *)
+
+END_VAR
+VAR_OUTPUT
+    (* standart Ausgänge *)
+    xOUT_InitDone : BOOL; // fertig initialisiert
+    xOUT_Done     : BOOL; // alle Abläufe fertig
+    xOUT_Ready    : BOOL; // Station ist bereit (wartet auf Start)
+    xOUT_ErrFlag  : BOOL; // Error Flag   
+    xOUT_Wait     : BOOL; // alle Abläufe warten
+    xOUT_AlarmST  : BOOL; // Station hat Alarm
+
+    (* spezifische Ausgänge *)
+
+END_VAR
+VAR
+
+    (* Flags *)
+    xReset     : BOOL; // Schrittketten zurücksetzen
+    xManuCycle : BOOL; // Manueller Zylus aktiv	
+    xNextStep  : BOOL; // Nächster Schritt erlaubt	
+
+    xDummy : BOOL := TRUE; // Platzhalter		
+
+    i : INT;
+
+    _iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+
+    _ProcessExecution : ProcessExecution_e := ProcessExecution_e.ExecuteImmediately;
+
+    _Mover            : REFERENCE TO FB_Mover;
+    _xMoverShouldLeave : BOOL; // flag to synchronise process and MoverMan, MoverMan needs to call TakeMover() to reset this flag
+
+END_VAR
+VAR_STAT
+    _iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Equals" Id="{8bac0c73-0ccf-4b73-b532-5308ec23070b}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{657b0df4-0f9d-41d9-87f9-0136e5aa09ba}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+	bInCopyCode : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter := THIS^._iInstanceCounter +1;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GiveMover" Id="{d729fa09-00f6-4fc7-85c9-8b734ecb221f}">
+      <Declaration><![CDATA[METHOD GiveMover : IProcessSampleMover
+VAR_INPUT
+	mover : REFERENCE TO FB_Mover;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._Mover REF= mover;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="iCompletionPC" Id="{8e22b084-7383-488c-96f6-894a84f0ff6f}">
+      <Declaration><![CDATA[(* % of completion of the process *)
+PROPERTY iCompletionPC : INT
+]]></Declaration>
+      <Get Name="Get" Id="{ed468f8e-ad8e-4266-9111-dfce9ece96d5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="iProcessTimeMili_1" Id="{00789763-b0c1-46da-b435-85ea24c17c60}">
+      <Declaration><![CDATA[(* Process time, expressed in milisecond *)
+PROPERTY iProcessTimeMili_1 : DINT
+]]></Declaration>
+      <Get Name="Get" Id="{804867bb-2eb1-42d5-be2d-daa9d1665638}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{1517f5af-3a45-47e8-823c-2d24b76bb472}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="iProcessTimeMili_2" Id="{8a91a320-6ef0-40f0-9503-6d27209218cd}">
+      <Declaration><![CDATA[(* Process time, expressed in milisecond *)
+PROPERTY iProcessTimeMili_2 : DINT
+]]></Declaration>
+      <Get Name="Get" Id="{0978e08d-b31b-4f3e-a166-9c86b7369801}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{024d548c-93a8-478e-9a9a-92f21b77cdbd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Mover" Id="{9d530e94-74ee-4547-a5fe-415f2b499bca}">
+      <Declaration><![CDATA[PROPERTY Mover : REFERENCE TO FB_Mover]]></Declaration>
+      <Get Name="Get" Id="{bb9a0d39-fe92-4058-97d5-e050b0496d3c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Mover REF= THIS^._Mover;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{b8fd65c4-0c02-4668-889e-b821e1ce887b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._Mover REF= Mover;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessExecution" Id="{bb49a628-8a3f-4bab-9d47-e6d291975a1b}">
+      <Declaration><![CDATA[PROPERTY PUBLIC ProcessExecution : ProcessExecution_e]]></Declaration>
+      <Get Name="Get" Id="{c448a1fd-c6c8-4395-9e08-aa6ef2c00017}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessExecution := THIS^._ProcessExecution;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{b70a4e0c-8b62-44e1-bd66-21e6ab166232}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[THIS^._ProcessExecution := ProcessExecution;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="TakeMover" Id="{4b449397-8235-4f7b-974a-5033a1ab7c6b}">
+      <Declaration><![CDATA[METHOD TakeMover : IProcessSampleMover
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.Mover REF= 0;
+THIS^._xMoverShouldLeave := FALSE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ToString" Id="{b8f24df3-0394-4666-b4ef-41086ff75475}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_AUT_ABSTRACT_', TO_STRING(THIS^._iID));
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="xBusy" Id="{74f36b79-cf92-4973-a1ae-9b817a07ead9}">
+      <Declaration><![CDATA[PROPERTY xBusy : BOOL]]></Declaration>
+      <Get Name="Get" Id="{350150f3-ec85-49f2-ab2a-3ce0f560f39f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{899959ff-8518-42e2-b770-7cb264186129}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="xDone" Id="{aa707ad9-32ef-4678-ac04-381eab7d05fd}">
+      <Declaration><![CDATA[PROPERTY xDone : BOOL]]></Declaration>
+      <Get Name="Get" Id="{91d48dbe-c7e8-4220-a0fd-66cc33ecf52a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="xMoverPathFree" Id="{186cf167-6687-4650-8500-ed37470b16c8}">
+      <Declaration><![CDATA[PROPERTY xMoverPathFree : BOOL]]></Declaration>
+      <Get Name="Get" Id="{93d97871-25b7-4a3b-9750-6db7069a86e9}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="xMoverShouldLeave" Id="{dd9d11c3-6b68-4291-b1db-308c5d0878a1}">
+      <Declaration><![CDATA[PROPERTY xMoverShouldLeave : BOOL]]></Declaration>
+      <Get Name="Get" Id="{4fd8e361-b39f-486c-8b35-94d9850bb1bf}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+  </POU>
+</TcPlcObject>

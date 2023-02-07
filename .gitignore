@@ -348,3 +348,21 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# TwinCAT files
+*.tpy
+*.tclrs
+*.compiled-library
+*.compileinfo
+*.tmc
+*.tmcRefac
+*.library
+*.project.~u
+*.tsproj.bak
+*.xti.bak
+LineIDs.dbg
+LineIDs.dbg.bak
+_Boot/
+_CompileInfo/
+_Libraries/
+_ModuleInstall/

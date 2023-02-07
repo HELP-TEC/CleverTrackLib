@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="PieceState_e" Id="{48455311-c5c1-4d8f-ac3d-6e18207bff4b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+/// Piece status
+TYPE PieceState_e :
+(
+    bad     := -1,
+    good    := 0,
+    working := 1 // a station works on a piece or has not finished its process
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

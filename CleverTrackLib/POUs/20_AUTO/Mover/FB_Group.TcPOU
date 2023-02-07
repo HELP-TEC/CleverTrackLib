@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Group" Id="{6dd0f146-70ad-4786-9e00-8c0d974977e3}" SpecialFunc="None">
+    <Declaration><![CDATA[// Create station group and manage shuttle behaviour 
+FUNCTION_BLOCK FB_Group IMPLEMENTS IObject
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+    _GroupNumber : INT; // group number
+
+    _StationList : ARRAY[1..CONST.MAX_STATION_PER_GROUP] OF POINTER TO FB_Station; // Array of member station member
+
+    _LastVisitedIndex : INT; // Last visited station index
+    _MaxStationList   : INT; // The current maximum of station in this group. 0 means no station are present
+	
+	_iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+END_VAR
+VAR_STAT
+	_iInstanceCounter : INT; // instance counter
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="AddStation" Id="{d6443e53-e5ce-4271-a040-35209da6de29}">
+      <Declaration><![CDATA[METHOD AddStation : REFERENCE TO FB_Group
+VAR_INPUT
+    station : REFERENCE TO FB_Station;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._MaxStationList < CONST.MAX_STATION_PER_GROUP THEN
+    THIS^._MaxStationList                     := THIS^._MaxStationList + 1;
+    THIS^._StationList[THIS^._MaxStationList] := ADR(station);
+ELSE
+    ASSERT(0);
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Equals" Id="{bbd3f0a2-a40c-4610-8b0a-e86465d72c43}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{2a89f594-415b-4343-9be0-42b0e01fdc16}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode  : BOOL; // if TRUE, the instance afterwards gets moved into the copy code (online change)
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iInstanceCounter := THIS^._iInstanceCounter + 1;
+THIS^._iID              := THIS^._iInstanceCounter;
+
+THIS^._MaxStationList   := 0;
+THIS^._LastVisitedIndex := 1; // the last station is set to the first
+
+IF THIS^._iID <= CONST.MAX_GROUP THEN
+    THIS^._GroupNumber := THIS^._iID;
+ELSE
+    ASSERT(0);
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNextStation" Id="{73796de9-d17f-484a-9b61-cf32e3704670}">
+      <Declaration><![CDATA[// The next station is always the one before the last visited
+METHOD GetNextStation : REFERENCE TO FB_Station
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[(* Note about this algorithme :
+ * The goal of this algorithm is to divide equaly the use of each station
+ * so the wear of station is the same. Other algorithm can be implemented 
+ * if needed.
+*)
+IF THIS^._LastVisitedIndex <= 1 THEN
+    THIS^._LastVisitedIndex := THIS^._MaxStationList;
+ELSE
+    THIS^._LastVisitedIndex := THIS^._LastVisitedIndex - 1;
+END_IF
+
+IF THIS^._LastVisitedIndex <= 0 THEN
+	ASSERT(0); // should never be 0 since index goes from 1 to max station index
+	THIS^._LastVisitedIndex := 1;
+END_IF
+
+GetNextStation REF= THIS^._StationList[THIS^._LastVisitedIndex]^;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="GroupNumber" Id="{9f42a6e8-0f38-43ce-86b4-079cb190cc2e}">
+      <Declaration><![CDATA[PROPERTY GroupNumber : INT]]></Declaration>
+      <Get Name="Get" Id="{305550d0-c73a-4350-b006-4d957dc97ab2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[GroupNumber := this^._GroupNumber;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="ToString" Id="{aebbe106-0d45-49be-99ec-be93ec38ff65}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_Station_', TO_STRING(THIS^._iID));]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

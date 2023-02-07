@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <GVL Name="OUT" Id="{34e7e6b5-dae5-49d5-beec-62d6ab1eb96d}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+(*******************************************************************)
+(* AUSGÄNGE *)
+(*******************************************************************)
+	(* Modul *)	
+	//-EL#
+//	Q000_LAMP_NRJ		AT %QX0.0		:	BOOL;			//Lampe Energie
+//	Q001_TuerVer		AT %QX0.1		:	BOOL;			//Türen verriegelt
+//	Q002_				AT %QX0.2		:	BOOL;			//
+//	Q003_				AT %QX0.3		:	BOOL;			//Reserve
+//	Q004_WF_FG			AT %QX0.4		:	BOOL;			//ST01 Freigabe WF 
+//	Q005_				AT %QX0.5		:	BOOL;			//Reserve
+//	Q006_				AT %QX0.6		:	BOOL;			//
+//	Q007_				AT %QX0.7		:	BOOL;			//
+//	
+//	Q010_				AT %QX1.0		:	BOOL;			//
+//	Q011_				AT %QX1.1		:	BOOL;			//
+//	Q012_				AT %QX1.2		:	BOOL;			//Reserve
+//	Q013_				AT %QX1.3		:	BOOL;			//Reserve
+//	Q014_				AT %QX1.4		:	BOOL;			//Reserve
+//	Q015_				AT %QX1.5		:	BOOL;			//Reserve
+//	Q016_				AT %QX1.6		:	BOOL;			//Reserve
+//	Q017_				AT %QX1.7		:	BOOL;			//Reserve
+//			
+//
+//	(* IO-Link  *)
+//(*******************************************************************)
+//	(* Lampe *)
+//	QW194A3				AT%Q*			:	WORD;			//Signallampe1
+//	QW194A6				AT%Q*			: 	WORD;			//Signallampe2
+//	
+//	Q194A3_SycStart		AT %Q*			:	BOOL;			//Syscstart 194A3
+//	Q194A6_SycStart		AT %Q*			:	BOOL;			//Syscstart 194A6	
+//	Q194A3_SycImp		AT %Q*			:	BOOL;			//SyscImp 194A3
+//	Q194A6_SycImp		AT %Q*			:	BOOL;			//SyscImp 194A6		
+//	
+//	(* Boxen *)
+//	(*Beispiel 	ST01 Stopper Mono, Greifer Mono, Vereinzelung Bi,
+//				ST02 Stopper Mono, Indexierer Mono, Presse Mono
+//	*)
+//	Q101_01_AS			AT	%QX2000.0	:	BOOL;			//101.01 Stopper
+//	Q200A1_1_12			AT	%QX2000.1	:	BOOL;			//
+//	Q101_02_AS			AT	%QX2000.2	:	BOOL;			//101.02 Greifer
+//	Q200A1_2_12			AT	%QX2000.3	:	BOOL;			//
+//	Q101_03_AS			AT	%QX2000.4	:	BOOL;			//101.03 Vereinzelung AS
+//	Q101_03_GS			AT	%QX2000.5	:	BOOL;			//101.03 Vereinzelung GS
+//	Q102_01_AS			AT	%QX2000.6	:	BOOL;			//102.01 Stopper
+//	Q200A1_4_12			AT	%QX2000.7	:	BOOL;			//
+//	Q102_02_AS			AT	%QX2000.8	:	BOOL;			//102.02 Indexieren
+//	Q200A1_5_12			AT	%QX2000.9	:	BOOL;			//
+//	Q102_03_AS			AT	%QX2000.10	:	BOOL;			//102.03 Pressen
+//	Q200A1_6_12			AT	%QX2000.11	:	BOOL;			//
+//	Q200A1_7_14			AT	%QX2000.12	:	BOOL;			//
+//	Q200A1_7_12			AT	%QX2000.13	:	BOOL;			//
+//	Q200A1_8_14			AT	%QX2000.14	:	BOOL;			//
+//	Q200A1_8_12			AT	%QX2000.15	:	BOOL;			//
+//(*	QW200A1				AT	%QB2000		:	WORD;			//IO-Link 8er VENTILBLOCK 
+//	Q200A1_1_14			AT	%QX2000.0	:	BOOL;			//
+//	Q200A1_1_12			AT	%QX2000.1	:	BOOL;			//
+//	Q200A1_2_14			AT	%QX2000.2	:	BOOL;			//
+//	Q200A1_2_12			AT	%QX2000.3	:	BOOL;			//
+//	Q200A1_3_14			AT	%QX2000.4	:	BOOL;			//
+//	Q200A1_3_12			AT	%QX2000.5	:	BOOL;			//
+//	Q200A1_4_14			AT	%QX2000.6	:	BOOL;			//
+//	Q200A1_4_12			AT	%QX2000.7	:	BOOL;			//
+//	Q200A1_5_14			AT	%QX2000.8	:	BOOL;			//
+//	Q200A1_5_12			AT	%QX2000.9	:	BOOL;			//
+//	Q200A1_6_14			AT	%QX2000.10	:	BOOL;			//
+//	Q200A1_6_12			AT	%QX2000.11	:	BOOL;			//
+//	Q200A1_7_14			AT	%QX2000.12	:	BOOL;			//
+//	Q200A1_7_12			AT	%QX2000.13	:	BOOL;			//
+//	Q200A1_8_14			AT	%QX2000.14	:	BOOL;			//
+//	Q200A1_8_12			AT	%QX2000.15	:	BOOL;			//
+//*)	
+//	QW200A2				AT	%QB2002		:	WORD;			//IO-Link 8er VENTILBLOCK 
+//	Q200A2_1_14			AT	%QX2002.0	:	BOOL;			//
+//	Q200A2_1_12			AT	%QX2002.1	:	BOOL;			//
+//	Q200A2_2_14			AT	%QX2002.2	:	BOOL;			//
+//	Q200A2_2_12			AT	%QX2002.3	:	BOOL;			//
+//	Q200A2_3_14			AT	%QX2002.4	:	BOOL;			//
+//	Q200A2_3_12			AT	%QX2002.5	:	BOOL;			//
+//	Q200A2_4_14			AT	%QX2002.6	:	BOOL;			//
+//	Q200A2_4_12			AT	%QX2002.7	:	BOOL;			//
+//	Q200A2_5_14			AT	%QX2002.8	:	BOOL;			//
+//	Q200A2_5_12			AT	%QX2002.9	:	BOOL;			//
+//	Q200A2_6_14			AT	%QX2002.10	:	BOOL;			//
+//	Q200A2_6_12			AT	%QX2002.11	:	BOOL;			//
+//	Q200A2_7_14			AT	%QX2002.12	:	BOOL;			//
+//	Q200A2_7_12			AT	%QX2002.13	:	BOOL;			//
+//	Q200A2_8_14			AT	%QX2002.14	:	BOOL;			//
+//	Q200A2_8_12			AT	%QX2002.15	:	BOOL;			//
+
+
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

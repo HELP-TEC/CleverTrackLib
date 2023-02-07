@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="PaletteCmd_bits_t" Id="{9388138e-10af-41e1-aeb2-4b8ec81ee5a6}">
+    <Declaration><![CDATA[TYPE PaletteCmd_bits_t :
+STRUCT
+    releaseToTargetOffset : BIT;
+    direction             : BIT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_ABL_100" Id="{9fce296e-52cc-43e3-9eee-12694f4afd69}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ABL_100
+(****************************************************************************************)
+(*	TITEL				Bezeichnung Ablauf	    										*)
+(*	Status				ungetestet                         								*)
+(*  Version:			1.0																*)
+(*	Beschrieb:			Ablaufbeschreibung												*)
+(*																						*)
+(*	Steps:																				*)
+(*		RESET:=0		Reset der Station												*)
+(* 		INIT:=100		Initialisieren													*)
+(*		... 			...																*)
+(*		READY:=999		Initialisiert, Bereit für Start									*)
+(*		START:=1000		Start Zyklisch 													*)
+(*		... 			...																*)
+(*		DONE:=8000		Letzer Schritt													*)
+(*		ERROR:=9000		ALARM/Fehler													*)
+(* 	09.09.2019/Dj																		*)
+(***********************************Revisionen*******************************************)
+(*	dd.mm.yyyy   KZ    x.y			Beschrieb											*)
+(****************************************************************************************)
+
+VAR_INPUT
+    xIN_Reset       : BOOL;          // Schrittkette zurücksetzen 
+    xIN_Init        : BOOL;          // Initialisieren
+    xIN_Quit        : BOOL;          // Fehler quittieren 
+    xIN_Start       : BOOL;          // Startbefehl
+    xIN_Sperre      : BOOL;          // FB Sperren 
+    xIN_NextStep    : BOOL;          // Nächsten Schritt ausführen 
+    xIN_AlarmAktiv  : BOOL;          // Anlage hat Alarm
+    xIN_DryCycle    : BOOL;          // Fahren ohne Teile
+    xIN_RestartCYCL : BOOL;          // Zyklus erneut starten im STEP, END, LEERFAHREN
+    xIN_MoverInPos  : BOOL;          // Set this flag when a mover is in position and ready to be handled
+    enIN_State      : enState;       // Status Anlage
+    tIN_Timeout     : TIME := T#10s; // Timout
+
+    pxFG_Freigabe : POINTER TO BOOL; //Freigabe von Station
+
+    // Application specific
+    iProcessTimeMili : UDINT := 5000; // user defined station duration, in milisecond
+END_VAR
+VAR_OUTPUT
+    (* standart Ausgänge *)
+    xOUT_ErrFlag   : BOOL;   // Error Flag 
+    xOUT_Busy      : BOOL;   // Baustein befindet sich im Ablauf 
+    xOUT_Done      : BOOL;   // Baustein hat den Ablauf beendet 		
+    xOUT_Ready     : BOOL;   // Ready to begin, should be the same state as done	
+    xOUT_Timeout   : BOOL;   // Timeout FB 
+    xOUT_InitDone  : BOOL;   // initialisierung fertig
+    xOUT_Wait      : BOOL;   // Wartet auf Bedingung
+    xOUT_MoverFree : BOOL;   // The mover is free to move
+    iOUT_Step      : INT;    // Aktueller Schritt 
+    sOUT_Step      : STRING; // Aktueller Schritt but in string format
+    bOUT_Error     : BYTE;   // Fehlernummer
+
+    iOUT_ProcessCompletion : INT; //process completion, express in % (0-100)
+END_VAR
+VAR
+    (* Standard *)
+    (* Schritt *)
+    iLastStep : INT; // Merker letzter Schritt 
+    iPreStep  : INT; // Schritt zurück nach Alarm 
+    iAktStep  : INT; // aktueller Schritt
+
+    // Trigger Starten 
+    rtSTART : R_TRIG;
+    // Timer TimeOut 
+    TON_Timeout : TON;
+
+    (* Bausteine *)
+
+    (* Spezial *)
+    iStartProcessTimeMili : UDINT; // start of the processing time, accurate at 100ns 
+
+END_VAR
+VAR CONSTANT
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*******************************************************************)
+(* Trigger  *)
+(*******************************************************************)
+(* Zurücksetzen *)
+IF xIN_RESET THEN
+    iPreStep  := ST100_e.RESET;
+    iOUT_Step := ST100_e.RESET;
+END_IF;
+
+(* Error Quittieren *)
+IF (bOUT_Error <> 0) AND xIN_Quit THEN
+    xOUT_ErrFlag := FALSE;
+    bOUT_Error   := 0;
+    iOUT_Step    := iPreStep;
+END_IF;
+
+(*******************************************************************)
+(* Timer *)
+(*******************************************************************)
+TON_Timeout(IN := xIN_NextStep AND (iLastStep = iOUT_Step) (*todo FG *) ,
+            PT := tIN_Timeout);
+
+(*******************************************************************)
+(* Bausteine *)
+(*******************************************************************)
+
+(*******************************************************************)
+(* OUTPUTS *)
+(*******************************************************************)
+// Error Flag 
+xOUT_ErrFlag := (bOUT_Error <> 0);
+// Baustein befindet sich im Ablauf 
+xOUT_Busy := (iOUT_Step > ST100_e.READY) AND (iOUT_Step < ST100_e.DONE);
+// Baustein hat den Ablauf beendet
+xOUT_Done := (iOUT_Step = ST100_e.DONE);
+// Process ready
+xOUT_Ready := (iOUT_Step = ST100_e.READY);
+// Timeout FB 				 		
+xOUT_Timeout := TON_Timeout.Q;
+// Itialisierung fertig			
+xOUT_InitDone := (iOUT_Step = ST100_e.READY);
+// Aktueller Schritt			
+iOUT_Step := iOUT_Step; //Im Ablauf gesetzt		
+sOUT_Step := TO_STRING(iOUT_Step);
+//Fehlernummer	 
+bOUT_Error := bOUT_Error; //Im Ablauf/FB gesetzt	
+(* Warte (alle Schritte wo auf FG oder Teile gewartet wird) *)
+xOUT_Wait := (iOUT_Step = ST100_e.DONE);
+
+xOUT_MoverFree := iOUT_Step >= ST100_e.MOVER_FREE_OP AND iOUT_Step < ST100_e.MOVER_NEEDED_OP;
+
+IF iAktStep < ST100_e.START THEN
+    iOUT_ProcessCompletion := 0;
+ELSIF iAktStep > ST100_e.DONE THEN
+    iOUT_ProcessCompletion := getPercent(iPreStep, TO_INT(ST100_e.START), TO_INT(ST100_e.proceedOperation_2) + 1);
+ELSIF ST100_e.DONE = iAktStep THEN
+    iOUT_ProcessCompletion := 100;
+ELSE
+    // iOUT_ProcessCompletion := getPercent(iAktStep, TO_INT(ST100_e.START), TO_INT(ST100_e.releaseMover) + 1);
+    IF iProcessTimeMili > 0 THEN
+        IF iAktStep < ST100_e.proceedOperation_1 THEN
+            iOUT_ProcessCompletion := 0;
+        ELSIF iAktStep = ST100_e.proceedOperation_1 THEN
+            iOUT_ProcessCompletion := TO_INT(((GetTick() - iStartProcessTimeMili) * 100) / iProcessTimeMili);
+        ELSIF iAktStep = ST100_e.proceedOperation_2 THEN
+            iOUT_ProcessCompletion := 50 + TO_INT(((GetTick() - iStartProcessTimeMili) * 100) / iProcessTimeMili);
+        ELSE
+            iOUT_ProcessCompletion := 50;
+        END_IF
+    ELSE
+        iOUT_ProcessCompletion := 0;
+    END_IF
+END_IF
+
+(*******************************************************************)
+(* Ablauf *)
+(*******************************************************************)
+
+(* Sperren *)
+IF xIN_Sperre THEN
+    iPreStep  := ST100_e.RESET;
+    iOUT_Step := ST100_e.RESET;
+    RETURN;
+END_IF;
+
+(* Schritt Merker *)
+IF iAktStep <> iOUT_Step THEN
+    iLastStep := iAktStep;
+    iAktStep  := iOUT_Step;
+END_IF
+
+(* START *)
+rtSTART(CLK := xIN_Start);
+
+(*******************************************************************)
+(* Schrittkette  *)
+(*******************************************************************)
+CASE iOUT_Step OF
+
+(***** RESET *****)
+ST100_e.RESET: (* Schritt 0-99 *)
+    //Initialisierungen
+    //Start Init Ablauf
+    IF xIN_Init THEN
+        iOUT_Step := ST100_e.INIT;
+        //Start Manu Ablauf
+    ELSIF enIN_State = StateMANU AND xIN_NextStep THEN
+        iOUT_Step := ST100_e.INIT;
+    END_IF;
+
+(***** INIT *****)
+ST100_e.INIT: (* Grundstellung ? *)
+    IF TRUE THEN
+        iOUT_Step := ST100_e.READY;
+    ELSE
+        iOUT_Step := ST100_e.INIT;
+    END_IF;
+
+(***** READY / INIT DONE *****)
+ST100_e.READY:        (* Start AUTO,END,LEER,STEP *)
+    IF xIN_Start THEN //IF rtSTART.Q THEN
+        iOUT_Step := ST100_e.START;
+    END_IF
+
+(***** START  ZYKLISCH *****)
+ST100_e.START: (*  *)
+    IF xIN_NextStep AND pxFG_Freigabe^ THEN
+        iOUT_Step             := ST100_e.proceedOperation_1;
+        iStartProcessTimeMili := GetTick();
+    END_IF;
+
+ST100_e.proceedOperation_1: (*  *)
+    IF xIN_NextStep AND (GetTick() - iStartProcessTimeMili) >= (iProcessTimeMili / 2) THEN
+        iOUT_Step := ST100_e.waitOnMover;
+    END_IF;
+
+ST100_e.waitOnMover: (*  *)
+    IF xIN_NextStep AND xIN_MoverInPos THEN
+        iStartProcessTimeMili := GetTick();
+        iOUT_Step             := ST100_e.proceedOperation_2;
+    END_IF;
+
+ST100_e.proceedOperation_2: (*  *)
+    IF xIN_NextStep AND (GetTick() - iStartProcessTimeMili) >= (iProcessTimeMili / 2) THEN
+        iOUT_Step := ST100_e.DONE;
+    END_IF;
+
+(***** DONE *****)
+ST100_e.DONE: (* Letzter Schritt  *)
+    IF NOT xIN_AlarmAktiv THEN
+        //AUTO
+        IF (enIN_State = StateAUTO) AND xIN_RestartCYCL THEN
+            iOUT_Step := ST100_e.START;
+            //STEP / END / LEERFAHREN restart
+        ELSIF (enIN_State < StateAUTO) AND (enIN_State >= enState.StateSTEP) AND xIN_RestartCYCL THEN
+            iOUT_Step := ST100_e.START;
+            //STEP / END / LEERFAHREN fertig
+        ELSIF (enIN_State = StateREADY) THEN
+            iOUT_Step := ST100_e.READY;
+        END_IF;
+    END_IF;
+
+(************ ERROR *************)
+ST100_e.ERROR: (* ERROR *) ;
+
+END_CASE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ABL_100">
+      <LineId Id="4280" Count="165" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_MoverMan" Id="{46c19d28-7ae9-4f45-9321-6275282c7579}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MoverMan
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+    xOUT_AllMoverEmpty : BOOL; // TRUE when LastStationVisited from all shuttle are 0
+    xOUT_Error         : BOOL; // CleverTrack is in error and needs a reset
+END_VAR
+VAR
+    {attribute 'no_copy'}
+    _PieceHolderList : ARRAY[1..2] OF FB_PieceHolderMover[
+        (0),
+        (0)];
+
+    {attribute 'no_copy'}
+    _SimuMoverList : ARRAY[1..19] OF FB_SimuMoverAxis[
+        (116),
+        (433),
+        (750),
+        (1067),
+        (1384),
+        (1701),
+        (2018),
+        (2335),
+        (2652),
+        (3000),
+        (3400),
+        (3800),
+        (5200),
+        (5600),
+        (6000),
+        (6400),
+        (6800),
+        (7200),
+        (7600)];
+
+    {attribute 'no_copy'}
+    _MoverList : ARRAY[1..19] OF FB_Mover[
+        (1, _SimuMoverList[1]),
+        (2, _SimuMoverList[2]),
+        (3, _SimuMoverList[3]),
+        (4, _SimuMoverList[4]),
+        (5, _SimuMoverList[5]),
+        (6, _SimuMoverList[6]),
+        (7, _SimuMoverList[7]),
+        (8, _SimuMoverList[8]),
+        (9, _SimuMoverList[9]),
+        (10, _SimuMoverList[10]),
+        (11, _SimuMoverList[11]),
+        (12, _SimuMoverList[12]),
+        (13, _SimuMoverList[13]),
+        (14, _SimuMoverList[14]),
+        (15, _SimuMoverList[15]),
+        (16, _SimuMoverList[16]),
+        (17, _SimuMoverList[17]),
+        (18, _SimuMoverList[18]),
+        (19, _SimuMoverList[19])];
+
+    {attribute 'no_copy'}
+    _PosList : ARRAY[1..CONST.STATION_NUMBER] OF FB_Position[
+        (125, 1, 1),  // 105
+        (625, 1, 1),  // 110
+        (1125, 1, 1), // 115
+        (1375, 1, 1), // 120
+        (1625, 1, 1), // 125
+        (2375, 1, 1), // 130
+        (2625, 1, 1), // 135
+        (2875, 1, 1), // 140
+        (3125, 1, 1), // 145
+        (3625, 1, 1), // 150
+        (3875, 1, 1), // 155
+        // second part
+        (5205, 1, 1), // 160
+        (5455, 1, 1), // 165
+        (5897, 1, 1), // 170
+        (7365, 1, 1), // 175
+        (7630, 1, 1), // 176
+        (8655, 1, 1), // 180
+        (8905, 1, 1)  // 185
+    ];
+
+    {attribute 'no_copy'}
+    _StationList : ARRAY[1..CONST.STATION_NUMBER] OF
+        FB_Station[
+        (_PosList[1],
+         PRG.st105_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         5),
+        (_PosList[2],
+         PRG.st110_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         10),
+        (_PosList[3],
+         PRG.st115_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         15),
+        (_PosList[4],
+         PRG.st120_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         20),
+        (_PosList[6],
+         PRG.st125_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         25),
+        (_PosList[5],
+         PRG.st130_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         30),
+        (_PosList[7],
+         PRG.st135_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         35),
+        (_PosList[8],
+         PRG.st140_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         40),
+        (_PosList[9],
+         PRG.st145_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         45),
+        (_PosList[10],
+         PRG.st150_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         50),
+        (_PosList[11],
+         PRG.st155_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         55),
+        (_PosList[12],
+         PRG.st160_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         60),
+        (_PosList[13],
+         PRG.st165_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         65),
+        (_PosList[14],
+         PRG.st170_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         70),
+        (_PosList[15],
+         PRG.st175_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         75),
+        (_PosList[16],
+         PRG.st176_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         76),
+        (_PosList[17],
+         PRG.st180_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         80),
+        (_PosList[18],
+         PRG.st185_aut,
+         0,
+         ApproachScenario_e.DoNotWait,
+         3,
+         85)];
+
+    // Smart
+    {attribute 'no_copy'}
+    _StationSet1 :
+        ARRAY[1..CONST.STATION_NUMBER] OF INT := [0,  // ST105
+                                                  0,  // ST110
+                                                  -1, // ST115
+                                                  0,  // ST120
+                                                  0,  // ST125
+                                                  0,  // ST130
+                                                  0,  // ST135
+                                                  0,  // ST140
+                                                  0,  // ST145
+                                                  0,  // ST150
+                                                  0,  // ST155
+                                                  0,  // ST160
+                                                  0,  // ST165
+                                                  0,  // ST170
+                                                  1,  // ST175
+                                                  1,  // ST176
+                                                  0,  // ST180
+                                                  0]; // ST185
+
+    {attribute 'no_copy'}
+    _SelWorkStationList : ARRAY[1..7] OF POINTER TO ARRAY[1..CONST.STATION_NUMBER] OF INT
+        := [ADR(_StationSet1),
+            ADR(_StationSet1),
+            ADR(_StationSet1),
+            ADR(_StationSet1),
+            ADR(_StationSet1),
+            ADR(_StationSet1),
+            ADR(_StationSet1)];
+
+    {attribute 'no_copy'}
+    _WorkStationList : FB_StationMan(
+        ADR(_StationList),
+        ADR(PERS.arrStationUsedList),
+        _PieceHolderList[1]);
+
+    step : INT := 0; //test step
+
+    mv_i                : INT;           // mover index
+    bMoverSync          : BOOL := FALSE; // external trigger for movers
+    iNumOfMoverOnTheWay : INT;           // temp var to know how many mover there are between a given mover and its next station
+
+    lastEmptyStation : REFERENCE TO FB_Station; // temp var to store the next free station
+    tempMover        : REFERENCE TO FB_Mover;
+
+    HMI_Scenario   : ApproachScenario_e := ApproachScenario_e.WaitOnFinishedProcess;
+    HMI_TimeAvg    : DINT               := 1000;
+    HMI_TimeMin    : DINT               := 900;
+    HMI_TimeMax    : DINT               := 1100;
+    HMI_xStopMover : BOOL               := FALSE;
+    HMI_iSelMover  : INT                := 1;
+
+    HMI_Bp_Enable_Power   : structButton;
+    fb_Bp_Enable_Power    : FB_BUTTON;
+    HMI_Bp_Enable_Process : structButton;
+    fb_Bp_Enable_Process  : FB_BUTTON;
+
+    HMI_send_all_shuttle_to_unload : BOOL;
+
+    RT_apply_station_list : Tc2_Standard.R_TRIG;
+
+    old_recipe : INT;
+
+    _iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+END_VAR
+VAR CONSTANT
+    TRACK_SIMULATION : BOOL := FALSE; // Set to true when supertrack is in simulation
+END_VAR
+VAR_STAT
+    _iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ---------------------------------------------------------------------------- *)
+(* THIS IS A PARTICULAR IMPLEMENTATION OF CLEVERTRAKLIB. THIS SHOULD BE REMOVED *)
+CASE step OF
+
+0: // setup everything
+    FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        _MoverList[mv_i].SetStation(_WorkStationList.GetStartStation(_MoverList[mv_i].MoverAxis.CurrentPos)^);
+        // _MoverList[mv_i].SetPieceHolder( _WorkStationList[PH_num].PieceHolder);
+    END_FOR
+
+    step := 5;
+
+5: // wait until the whole path is free
+    IF gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.wholePathFree AND
+       (HMI.enState <> enState.StateMANU) THEN
+        step := 10;
+    ELSIF NOT CONST.BIND_WITH_TRACK THEN
+        step := 15;
+    END_IF
+
+10: // turn power on
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower := (HMI.enState <> enState.StateMANU);
+
+    IF gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.powerOn THEN
+
+        FOR mv_i := 1 TO CONST.MOVER_NUMBER - 1 BY 1 DO
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bCommand.dirFarward := TRUE;
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bCommand.dirReverse := FALSE;
+        END_FOR
+
+        step := 11;
+    END_IF
+
+11: // init all mover until they the first shuttle is found
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.startMoverNumberingSequence := (HMI.enState <> enState.StateMANU);
+
+    IF gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.allIdSet THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.setShuttleNumber      := FALSE;
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.releaseUnknownShuttle := FALSE;
+        step                                                                := 13;
+    END_IF
+
+    IF gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.unknownMoverAtTarget1 THEN
+        IF TRUE (* first shuttle sensor *) OR (TRACK_SIMULATION AND CONST.USE_SIMULATION) THEN
+            step := 12;
+        ELSE
+            gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.releaseUnknownShuttle := TRUE;
+        END_IF
+    ELSE
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.releaseUnknownShuttle := FALSE;
+    END_IF
+
+12: // set all id since the first is found
+    IF gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.unknownMoverAtTarget1 THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.setShuttleNumber := TRUE;
+    ELSE
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.setShuttleNumber := FALSE;
+    END_IF
+
+    IF gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.allIdSet THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.setShuttleNumber      := FALSE;
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.releaseUnknownShuttle := FALSE;
+        step                                                                := 13;
+    END_IF
+
+13: // stop id attrib sequence
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.startMoverNumberingSequence := FALSE;
+    step                                                                      := 14;
+
+14: // check parameter
+    // TODO here we have clearly somthing that will not work
+    // when using groups... Groups should use the first station to set the waiting position
+    // of the whole group
+    IF THIS^.CheckWaitPosNotBehindStation() THEN
+        ASSERT(0);
+    END_IF
+
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enableProcess := TRUE;
+    step                                                        := 15;
+
+15: //move every shuttle to the last station
+    FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        _MoverList[mv_i].SetStation(THIS^._StationList[1]);
+        _MoverList[mv_i].MoveToStation();
+
+        _MoverList[mv_i].GetPiece(PiecePos_e.Assembly_left).UnloadPiece();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Assembly_right).UnloadPiece();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Test_left).UnloadPiece();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Test_right).UnloadPiece();
+
+        _MoverList[mv_i].GetPiece(PiecePos_e.Assembly_left).Load();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Assembly_right).Load();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Test_left).Load();
+        _MoverList[mv_i].GetPiece(PiecePos_e.Test_right).Load();
+    END_FOR
+
+    THIS^._WorkStationList.ApplyNewPath(ADR(THIS^._StationList),
+                                        ADR(PERS.arrStationUsedList[PERS.iRecipeCurrent]),
+                                        THIS^._PieceHolderList[1]);
+
+    step := 16;
+
+16:
+    IF HMI_send_all_shuttle_to_unload THEN
+        step := 15;
+    END_IF
+// do nothing, init done
+
+END_CASE
+
+(* ---------------------------------------------------------------------------- *)
+
+// should be done elsewhere ...
+SIMU.lrAccelMover := SIMU.lrAccelMoverSlider * SIMU.lrAccelMoverSlider;
+
+RT_apply_station_list(CLK :=); // set by the HMI
+
+IF RT_apply_station_list.Q OR (old_recipe <> PERS.iRecipeCurrent) THEN
+    THIS^._WorkStationList.ApplyNewPath(ADR(THIS^._StationList),
+                                        ADR(PERS.arrStationUsedList[PERS.iRecipeCurrent]),
+                                        THIS^._PieceHolderList[1]);
+
+    old_recipe := PERS.iRecipeCurrent;
+END_IF
+
+//Affect station offset depending on the station offset list
+FOR mv_i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    _StationList[mv_i].Offset := PERS.arrStationOffsetsList[PERS.iRecipeCurrent][mv_i];
+END_FOR
+
+FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    IF HMI.enState = enState.StateAUTO OR HMI.enState = enState.StateSTEP OR HMI.enState = enState.StateLEER THEN
+
+        CASE _MoverList[mv_i].State OF
+
+        MoverState_e.OperationDone:
+            IF __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+                _MoverList[mv_i].Station.Process.TakeMover();
+            ELSE
+                ASSERT(0);
+            END_IF
+
+            _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+        MoverState_e.WaitOnNextStation:
+            // depending on the next station scenario, move
+            CASE _MoverList[mv_i].Station.ApproachScenario OF
+            // do not wait
+            ApproachScenario_e.DoNotWait:
+                _MoverList[mv_i].MoveToStation();
+
+            // wait on the next station to be free
+            ApproachScenario_e.WaitOnFinishedProcess:
+                // Are we in a waiting spot ?
+                IF __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+
+                    iNumOfMoverOnTheWay := THIS^.GetNumOfMoverOnTheWay(_MoverList[mv_i]);
+
+                    IF 0 = iNumOfMoverOnTheWay THEN
+                        _MoverList[mv_i].MoveToStation();
+
+                    ELSIF iNumOfMoverOnTheWay <= _MoverList[mv_i].Station.iMaxWaitingMovers THEN
+                        _MoverList[mv_i].MoveToWaitSpot();
+                    END_IF
+
+                ELSE
+                    _MoverList[mv_i]
+                        .SetStation(_WorkStationList.GetNextStationWithProcess(_MoverList[mv_i].Station));
+                END_IF
+
+            ApproachScenario_e.WaitOnFreeStation:
+
+                IF NOT THIS^.IsMoverInRange(_MoverList[mv_i].MoverAxis.CurrentPos + (CONST.MAX_MOVER_SIZE / 2.0),
+                                            _MoverList[mv_i].Station.Position.lrWorkPosition + CONST.MAX_MOVER_SIZE)
+                    THEN
+                    _MoverList[mv_i].MoveToStation();
+
+                END_IF
+
+            // wait on the previous station to be free (syncronize with the previous)
+            ApproachScenario_e.WaitOnPrevProcess:
+                // TODO implement !!!!
+                _MoverList[mv_i].MoveToStation();
+
+            // Move the mover only when all movers process are finished
+            ApproachScenario_e.WaitOnExternalTrigger:
+                IF bMoverSync THEN
+                    // move only when there are no mover currently going to the station
+                    IF NOT THIS^.IsMoverMovingToStation(mv_i) THEN
+                        _MoverList[mv_i].MoveToStation();
+                    END_IF
+                END_IF
+
+            END_CASE
+
+        MoverState_e.WaitLeaveCurrentStation:
+            IF NOT CONST.BIND_WITH_TRACK THEN
+                _MoverList[mv_i].State := MoverState_e.MovingToStation;
+            ELSE
+                IF NOT gMoverAxis.I_CT_Shuttle_from_BR.asStruct[mv_i].bStatus.at_target THEN
+                    _MoverList[mv_i].State := MoverState_e.MovingToStation;
+                    // TODO need a fix to prevent a mover to be stucked here
+                END_IF
+            END_IF
+
+        MoverState_e.MovingToStation:
+            IF _MoverList[mv_i].IsInStationPos() THEN
+                _MoverList[mv_i].State := MoverState_e.InStationPos;
+
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+            ELSIF __ISVALIDREF(_MoverList[mv_i].Station.Process) AND NOT CONST.BIND_WITH_TRACK THEN
+                iNumOfMoverOnTheWay := THIS^.GetNumOfMoverOnTheWay(_MoverList[mv_i]);
+
+                IF _MoverList[mv_i].Station.Process.xMoverPathFree AND
+                   NOT (_MoverList[mv_i].Station.Equals(THIS^.GetNextMover(_MoverList[mv_i]).Station)) AND
+                   (iNumOfMoverOnTheWay <= _MoverList[mv_i].Station.iMaxWaitingMovers) THEN
+                    _MoverList[mv_i].MoveToStation();
+                END_IF
+
+            ELSIF _MoverList[mv_i].MoverAxis.isInPos AND NOT CONST.BIND_WITH_TRACK THEN
+                _MoverList[mv_i].MoveToStation();
+            END_IF
+
+        MoverState_e.InStationPos:
+            IF NOT __ISVALIDREF(_MoverList[mv_i].Station) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+                // If there is no station (waiting position)
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+            ELSE
+                IF __ISVALIDREF(_MoverList[mv_i].Station.Process.Mover) THEN
+                    // ASSERT(0); TODO we have to find why we are here so often.
+
+                    IF _MoverList[mv_i].Station.Process.xMoverShouldLeave THEN
+                        _MoverList[mv_i].Station.Process.TakeMover();
+                        ASSERT(0);
+
+                    ELSE
+                        _MoverList[mv_i].State := MoverState_e.OperationDone;
+                    END_IF
+                ELSE
+                    _MoverList[mv_i].Station.Process.GiveMover(_MoverList[mv_i]);
+                    _MoverList[mv_i].State := MoverState_e.InOperation;
+                END_IF
+            END_IF
+
+        MoverState_e.InOperation:
+            IF NOT __ISVALIDREF(_MoverList[mv_i].Station) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.OperationDone;
+
+            ELSIF _MoverList[mv_i].Station.Process.xMoverShouldLeave THEN
+                _MoverList[mv_i].State := MoverState_e.OperationDone;
+
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station.Process.Mover) THEN
+                ASSERT(0);
+                _MoverList[mv_i].Station.Process.GiveMover(_MoverList[mv_i]);
+
+            ELSIF (__ISVALIDREF(_MoverList[mv_i].Station.Process.Mover) AND_THEN
+                   (_MoverList[mv_i].Station.Process.Mover._id <> mv_i)) THEN
+                ASSERT(0);
+                _MoverList[mv_i].Station.Process.Mover.Abort(_StationList[1]);
+                _MoverList[mv_i].Station.Process.GiveMover(_MoverList[mv_i]);
+            END_IF
+
+        MoverState_e.PerformRelativeMove:
+            IF NOT __ISVALIDREF(_MoverList[mv_i].Station) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.OperationDone;
+
+            ELSIF _MoverList[mv_i].Station.Process.xMoverShouldLeave THEN
+                _MoverList[mv_i].State := MoverState_e.OperationDone;
+
+            ELSE
+                IF NOT _MoverList[mv_i].IsInStationPos() THEN
+                    _MoverList[mv_i].State := MoverState_e.WaitRelativeMoveEnd;
+                END_IF
+
+            END_IF
+
+        MoverState_e.WaitRelativeMoveEnd:
+            IF NOT __ISVALIDREF(_MoverList[mv_i].Station) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.WaitOnNextStation;
+                _MoverList[mv_i].SetStation(_WorkStationList.GetNextStation(_MoverList[mv_i].Station));
+
+            ELSIF NOT __ISVALIDREF(_MoverList[mv_i].Station.Process) THEN
+                ASSERT(0);
+                _MoverList[mv_i].State := MoverState_e.OperationDone;
+
+            ELSE
+                IF _MoverList[mv_i].IsInStationPos() THEN
+                    _MoverList[mv_i].State := MoverState_e.InOperation;
+
+                ELSIF gMoverAxis.I_CT_Shuttle_from_BR.asStruct[mv_i].bStatus.at_target THEN
+                    _MoverList[mv_i].State := MoverState_e.PerformRelativeMove;
+                END_IF
+
+            END_IF
+
+        END_CASE
+    END_IF
+END_FOR
+
+// update bMoverSync
+bMoverSync := THIS^.IsAllMoverAtPosition() OR THIS^.IsMoverStucked();
+
+// start update simu mover **********************************************
+IF CONST.USE_SIMULATION THEN
+    FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        _MoverList[mv_i].MoverAxis(xIN_StopMover := HMI_xStopMover);
+    END_FOR
+END_IF
+
+// stop update simu mover **********************************************
+
+// start communication with B&R PLC ************************************
+gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.force_IDSet :=
+    NOT gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.allIdSet AND
+    ((11 = step) OR (12 = step) OR (13 = step)) AND
+    THIS^.IsAllIDSet();
+
+fb_Bp_Enable_Power(pbtIN := ADR(HMI_Bp_Enable_Power),
+                   xINon := gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower);
+
+fb_Bp_Enable_Process(pbtIN := ADR(HMI_Bp_Enable_Process),
+                     xINon := gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enableProcess);
+
+// track control
+IF CONST.BIND_WITH_TRACK THEN
+    // Quit
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.resetErrors := HMI.btArMain[7].press;
+
+    IF ((enState.StateMANU = HMI.enState) AND HMI_Bp_Enable_Power.rtrig) THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower :=
+            NOT gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower;
+    END_IF
+
+    IF ((enState.StateMANU = HMI.enState) AND HMI_Bp_Enable_Process.rtrig) THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enableProcess :=
+            NOT gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enableProcess;
+    END_IF
+
+    // This should be a temporary fix to be sure that the ST120 axis is up before
+    // any shuttle is allowed to run
+    IF (_14_STATE.fb_State.xIN_InitEND) THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower := TRUE;
+    ELSIF HMI.enState < enState.StateREADY AND (enState.StateMANU <> HMI.enState) THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enablePower := FALSE;
+    END_IF
+
+ELSE
+    gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.allIdSet := TRUE;
+
+END_IF
+
+// shuttle control
+IF CONST.BIND_WITH_TRACK AND gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.enableProcess THEN
+
+    FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        IF __ISVALIDREF(_MoverList[mv_i].Station) THEN
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bCommand.release :=
+                ((THIS^._MoverList[mv_i].State = MoverState_e.WaitLeaveCurrentStation) OR
+                (_MoverList[mv_i].State = MoverState_e.MovingToStation) OR
+                (_MoverList[mv_i].State = MoverState_e.PerformRelativeMove)) AND
+                gMoverAxis.I_CT_Shuttle_from_BR.asStruct[mv_i].bStatus.at_target;
+
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bNextStation    := _MoverList[mv_i].Station.SuperTrackNumber;
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].diNextOffset_um :=
+                LREAL_TO_DINT(_MoverList[mv_i].Station.Offset * 1000.0 +
+                              _MoverList[mv_i].MovingProcessOffset * 1000.0);
+
+            // echo At_Target
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bCommand.echo_At_Target :=
+                gMoverAxis.I_CT_Shuttle_from_BR.asStruct[mv_i].bStatus.at_target;
+
+            // echo at position
+            gMoverAxis.Q_CT_Shuttle_to_BR.asStruct[mv_i].bCommand.echo_in_pos :=
+                gMoverAxis.I_CT_Shuttle_from_BR.asStruct[mv_i].bStatus.in_position;
+
+        END_IF
+    END_FOR
+END_IF
+
+// stop communication with B&R PLC ************************************
+
+// test if path is free
+IF CONST.BIND_WITH_TRACK THEN
+    gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.wholePathFree := TRUE;
+
+    FOR mv_i := 1 TO CONST.STATION_NUMBER BY 1 DO
+        IF __ISVALIDREF(_StationList[mv_i].Process) AND_THEN NOT _StationList[mv_i].Process.xMoverPathFree THEN
+            gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.wholePathFree := FALSE;
+        END_IF
+    END_FOR
+
+    IF HMI.enState = enState.StateMANU THEN
+        gMoverAxis.Q_CT_Track_to_BR.asStruct.bCommand.wholePathFree := TRUE;
+    END_IF
+END_IF
+
+// start collision check **********************************************
+IF NOT CONST.BIND_WITH_TRACK THEN
+    FOR mv_i := 1 TO CONST.MOVER_NUMBER - 1 BY 1 DO
+        _MoverList[mv_i].MoverAxis.IsColliding(_MoverList[mv_i + 1].MoverAxis);
+        _MoverList[mv_i].MoverAxis.WillCollide(_MoverList[mv_i + 1].MoverAxis);
+
+        IF THIS^.IsMoverLost(THIS^._MoverList[mv_i]) THEN
+            // ASSERT HERE, WE SHOULD NEVER GO HERE
+            // ASSERT(0);
+        END_IF
+    END_FOR
+
+    _MoverList[CONST.MOVER_NUMBER].MoverAxis
+        .IsColliding(_MoverList[1].MoverAxis); // do not forget to test this case, too
+
+    _MoverList[CONST.MOVER_NUMBER].MoverAxis.WillCollide(_MoverList[1].MoverAxis);
+END_IF
+
+// end collision check **********************************************
+
+// start output affectation **********************************************
+xOUT_AllMoverEmpty := TRUE;
+
+FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    // IF (F_GetHighestStationDoneAssembly(_MoverList[mv_i]) <> 0) OR
+    //    (F_GetHighestStationDoneTest(_MoverList[mv_i]) <> 0) THEN
+    IF FALSE THEN
+        xOUT_AllMoverEmpty := FALSE;
+    END_IF
+END_FOR
+
+xOUT_Error := gMoverAxis.I_CT_Track_from_BR.asStruct.bStatus.error AND CONST.BIND_WITH_TRACK;
+
+// end output affectation **********************************************
+
+]]></ST>
+    </Implementation>
+    <Method Name="CheckWaitPosNotBehindStation" Id="{91490bb8-300b-4074-8087-f20c1e8574d1}">
+      <Declaration><![CDATA[// This method check if the wait pos of a given station is before another
+// station. This situation is not permitted by the system, yet
+METHOD CheckWaitPosNotBehindStation : BOOL
+VAR_INPUT
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CheckWaitPosNotBehindStation := FALSE;
+FOR i := 2 TO CONST.STATION_NUMBER BY 1 DO
+    CheckWaitPosNotBehindStation := CheckWaitPosNotBehindStation OR
+        THIS^._StationList[i].Position.lrWorkPosition + THIS^._StationList[i].WaitPos <
+        THIS^._StationList[i - 1].Position.lrWorkPosition;
+END_FOR
+
+// NO CHECK ARE MADE BETWEEN THE FIRST POS AND THE LAST ]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Equals" Id="{69e26c84-881e-456d-9a7a-7c7ef184dc60}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{fd5a5773-894a-43ac-8825-e9a7ed4ad3aa}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode  : BOOL; // if TRUE, the instance afterwards gets moved into the copy code (online change)
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter := THIS^._iInstanceCounter +1;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetAllMoverPos" Id="{31555170-e963-4718-a626-6c08d8fb2fa4}">
+      <Declaration><![CDATA[METHOD PUBLIC GetAllMoverPos : BOOL
+VAR_INPUT
+    my_mover_list : REFERENCE TO ARRAY[1..CONST.MOVER_NUMBER] OF MoverDict;
+END_VAR
+VAR
+    index : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR index := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    my_mover_list[index].MoverNum := index;
+    my_mover_list[index].MoverPos := THIS^._MoverList[index].MoverAxis.CurrentPos;
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetAllStationPos" Id="{7d6b8b41-c634-42b3-bd48-4260dd05b3cb}">
+      <Declaration><![CDATA[METHOD PUBLIC GetAllStationPos : BOOL
+VAR_INPUT
+    my_mover_list : REFERENCE TO ARRAY[1..CONST.STATION_NUMBER] OF StationDict;
+END_VAR
+VAR
+    index : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR index := 1 TO CONST.STATION_NUMBER BY 1 DO
+    my_mover_list[index].StationNum := index;
+    my_mover_list[index].StationPos := THIS^._StationList[index].Position.lrWorkPosition;
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetMoverIndex" Id="{1a2aaf1c-a900-421f-9679-2dd26ea29f6f}">
+      <Declaration><![CDATA[METHOD GetMoverIndex : INT
+VAR_INPUT
+    mover : REFERENCE TO FB_Mover;
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i:= 1 TO CONST.MOVER_NUMBER BY 1 DO 
+	IF mover.Equals(THIS^._MoverList[i]) THEN
+		GetMoverIndex := i;
+		EXIT;
+	END_IF
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetMoverInRange" Id="{a68028d2-c458-485f-a00e-ff27ccda88f7}">
+      <Declaration><![CDATA[// Is a shuttle present in the given region?
+// If 'from_pos' is greater than 'to_pos', this means we look in
+// a region that include the begining of the track
+METHOD PUBLIC GetMoverInRange : REFERENCE TO FB_Mover
+VAR_INPUT
+    from_pos : LREAL; // begin of the tested region (included)
+    to_pos   : LREAL; // end of the tested region (included)
+END_VAR
+VAR
+    i : INT;
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+GetMoverInRange REF= 0;
+
+IF from_pos < to_pos THEN
+    FOR i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        IF (THIS^._MoverList[i].MoverAxis.CurrentPos >= from_pos) AND
+           (THIS^._MoverList[i].MoverAxis.CurrentPos <= to_pos) THEN
+            GetMoverInRange REF= THIS^._MoverList[i];
+            EXIT;
+
+        END_IF
+    END_FOR
+ELSE // we test a region that pass by the maximum track length
+    FOR i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+        IF (THIS^._MoverList[i].MoverAxis.CurrentPos >= from_pos) OR
+           (THIS^._MoverList[i].MoverAxis.CurrentPos <= to_pos) THEN
+            GetMoverInRange REF= THIS^._MoverList[i];
+            EXIT;
+
+        END_IF
+    END_FOR
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetMoverPosFromIndex" Id="{650cd3d5-18be-4135-b97e-c202646f7d25}">
+      <Declaration><![CDATA[// Get the position of a given mover using its index number
+METHOD PUBLIC GetMoverPosFromIndex : LREAL
+VAR_INPUT
+    MoverIndex : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF (MoverIndex < 1) OR (MoverIndex > CONST.MOVER_NUMBER) THEN
+	GetMoverPosFromIndex := 0.0;
+ELSE
+	GetMoverPosFromIndex := THIS^._MoverList[MoverIndex].MoverAxis.CurrentPos;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNextMover" Id="{f32fd12d-e722-40d2-a3bf-10f3112be7d9}">
+      <Declaration><![CDATA[// Get the mover with the next number (Means the mover behind)
+METHOD GetNextMover : REFERENCE TO FB_Mover
+VAR_INPUT
+    Mover : REFERENCE TO FB_Mover;
+END_VAR
+VAR
+    moverIndex : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[moverIndex := THIS^.GetMoverIndex(Mover);
+
+IF moverIndex >= CONST.MOVER_NUMBER THEN
+    GetNextMover REF= THIS^._MoverList[1];
+ELSE
+    GetNextMover REF= THIS^._MoverList[moverIndex + 1];
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetNumOfMoverOnTheWay" Id="{c5556811-485c-4ab9-ab25-9793f8b71c59}">
+      <Declaration><![CDATA[// we check if there is a mover between refMover and the refMover.Station
+// This method is used to unblock a mover that cannot move because of a mover
+// "Behind" it that also want to move to the same station
+METHOD PRIVATE GetNumOfMoverOnTheWay : INT
+VAR_INPUT
+    refMover : REFERENCE TO FB_Mover; // The maybe stucking mover
+END_VAR
+VAR
+    lrMoverPosTemp   : LREAL; // we use this position beacuse maybe we are at the end of the track
+    lrStationPosTemp : LREAL; // we use this position beacuse maybe we are at the end of the track
+    i                : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GetNumOfMoverOnTheWay := 0;
+
+FOR i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    // If the mover is in front of the tested mover, we add MAX_TRACK_LENGTH (maybe we are at the end of the track ?)
+    IF refMover.IsInFront(THIS^._MoverList[i].MoverAxis.CurrentPos) THEN
+        lrMoverPosTemp := THIS^._MoverList[i].MoverAxis.CurrentPos + CONST.MAX_TRACK_LENGTH;
+    ELSE
+        lrMoverPosTemp := THIS^._MoverList[i].MoverAxis.CurrentPos;
+    END_IF
+
+    // If the mover is in front of the station, we add MAX_TRACK_LENGTH (maybe we are at the end of the track ?)
+    IF refMover.IsInFront(refMover.Station.Position.lrWorkPosition) THEN
+        lrStationPosTemp := refMover.Station.Position.lrWorkPosition + CONST.MAX_TRACK_LENGTH;
+    ELSE
+        lrStationPosTemp := refMover.Station.Position.lrWorkPosition;
+    END_IF
+
+    IF (lrMoverPosTemp > refMover.MoverAxis.CurrentPos) AND
+       (lrMoverPosTemp <= lrStationPosTemp) THEN
+	   // If a mover is at position but has
+        GetNumOfMoverOnTheWay := GetNumOfMoverOnTheWay + 1;
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetPrevMover" Id="{2a592bc1-5769-4abc-8ff3-c03f54588b09}">
+      <Declaration><![CDATA[// Get the mover with the previous number (Means the front mover)
+METHOD GetPrevMover : REFERENCE TO FB_Mover
+VAR_INPUT
+    Mover : REFERENCE TO FB_Mover;
+END_VAR
+VAR
+    moverIndex : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[moverIndex := THIS^.GetMoverIndex(Mover);
+
+IF moverIndex <= 1 THEN
+    GetPrevMover REF= THIS^._MoverList[CONST.MOVER_NUMBER];
+ELSE
+    GetPrevMover REF= THIS^._MoverList[moverIndex - 1];
+END_IF
+
+IF GetPrevMover.MoverAxis.CurrentPos < Mover.MoverAxis.CurrentPos THEN
+	GetPrevMover REF= THIS^.GetNextMover(Mover);
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsAllIDSet" Id="{5860aa09-dea1-46c1-8b47-5938e7977ae6}">
+      <Declaration><![CDATA[METHOD PRIVATE IsAllIDSet : BOOL
+VAR_INPUT
+END_VAR
+VAR
+    i : INT;
+    j : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsAllIDSet := TRUE;
+
+FOR i := 1 TO CONST.MOVER_NUMBER - 1 BY 1 DO
+
+    FOR j := i + 1 TO CONST.MOVER_NUMBER BY 1 DO
+        IsAllIDSet := IsAllIDSet AND
+                      (THIS^._MoverList[i].MoverAxis.CurrentPos <> THIS^._MoverList[j].MoverAxis.CurrentPos);
+    END_FOR
+
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsAllMoverAtPosition" Id="{fc0e89d4-7cf4-4d92-a63a-6ce23d60762e}">
+      <Declaration><![CDATA[METHOD IsAllMoverAtPosition : BOOL
+VAR_INPUT
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsAllMoverAtPosition := TRUE;
+
+FOR i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    IF (THIS^._MoverList[i].State = MoverState_e.WaitLeaveCurrentStation) OR
+       (THIS^._MoverList[i].State = MoverState_e.MovingToStation) OR
+       (THIS^._MoverList[i].State = MoverState_e.InStationPos) THEN
+        IsAllMoverAtPosition := FALSE;
+        EXIT;
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsMoverInRange" Id="{6965b54e-1f0e-4b71-958b-7a4c20eb19af}">
+      <Declaration><![CDATA[// Is a shuttle present in the given region?
+// If 'from_pos' is greater than 'to_pos', this means we look in
+// a region that include the begining of the track
+METHOD PUBLIC IsMoverInRange : BOOL
+VAR_INPUT
+    from_pos : LREAL; // begin of the tested region (included)
+    to_pos   : LREAL; // end of the tested region (included)
+END_VAR
+VAR
+    i : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsMoverInRange := __ISVALIDREF(THIS^.GetMoverInRange(from_pos, to_pos));]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsMoverLost" Id="{a86b0de5-72c6-4a8d-9bd7-0385975e09ca}">
+      <Declaration><![CDATA[// If the target station of a mover is not between the target of the previous and the next mover
+// this function will return true. This function is attendend to debug only
+METHOD IsMoverLost : BOOL
+VAR_INPUT
+    mover : REFERENCE TO FB_Mover;
+END_VAR
+VAR
+    i : INT;
+
+    prevStationLoc  : LREAL;
+    nextStationLoc  : LREAL;
+    moverStationLoc : LREAL; // mover to test location
+    posList         : ARRAY[0..2] OF LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[(* the algorithm function as fallow 
+
+First we built a sorted array based on the station position
+Then we search for the previous station position and fix
+our search index
+Then we check if the squence of mover is correct. The sequence must be
+PreviousMoverStation -> CurrentMoverStation -> NextMoverStation
+If we don't get this sequence, then the mover is lost.
+
+In fact, since we have only 3 elements, we only need to check
+the next station
+*)
+IsMoverLost := FALSE;
+
+nextStationLoc  := THIS^.GetNextMover(mover).Station.Position.lrWorkPosition;
+prevStationLoc  := THIS^.GetPrevMover(mover).Station.Position.lrWorkPosition;
+moverStationLoc := mover.station.Position.lrWorkPosition;
+
+posList[0] := prevStationLoc;
+posList[1] := moverStationLoc;
+posList[2] := nextStationLoc;
+
+SortBubbleLREAL(ADR(posList), 0, 2);
+
+IF posList[0] = prevStationLoc THEN
+    IF posList[1] <> moverStationLoc THEN
+        IsMoverLost := TRUE;
+    END_IF
+
+ELSIF posList[0] = moverStationLoc THEN
+    IF posList[1] <> nextStationLoc THEN
+        IsMoverLost := TRUE;
+    END_IF
+
+ELSE (* posList[0] = nextStationLoc *)
+    IF posList[1] <> prevStationLoc THEN
+        IsMoverLost := TRUE;
+    END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsMoverMovingToStation" Id="{a4975eb6-1f25-4d80-9015-4a3063980072}">
+      <Declaration><![CDATA[METHOD PRIVATE IsMoverMovingToStation : BOOL
+VAR_INPUT
+    iMoverNumber : INT; // the current mover number 
+END_VAR
+VAR
+    i           : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsMoverMovingToStation := FALSE;
+
+FOR i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+
+    // we don't check the tests mover station, else it will be always true
+    IF (iMoverNumber <> i) AND THIS^._MoverList[i].Station.Equals(THIS^._MoverList[iMoverNumber].Station) THEN
+        IsMoverMovingToStation := IsMoverMovingToStation OR
+                                  (THIS^._MoverList[i].State = MoverState_e.WaitLeaveCurrentStation) OR
+                                  (THIS^._MoverList[i].State = MoverState_e.MovingToStation) OR
+                                  (THIS^._MoverList[i].State = MoverState_e.InStationPos);
+
+        // Do not exit here, since we OR the flag
+        // TODO maybe we should add an IF statement to exit when the flag is true
+        // because it will never be false again ... ? // PERFORMANCE ISSUE
+    END_IF
+
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsMoverStucked" Id="{4917e248-fe89-4b4c-aa0e-a0174a4c4558}">
+      <Declaration><![CDATA[// Return TRUE if at least one mover is stucked
+METHOD IsMoverStucked : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsMoverStucked := FALSE;
+
+FOR mv_i := 1 TO CONST.MOVER_NUMBER BY 1 DO
+    IF THIS^._MoverList[mv_i].MoverAxis.xStuck THEN
+        IsMoverStucked := TRUE;
+        EXIT;
+    END_IF
+END_FOR
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsProcessUsed" Id="{50177cad-7f94-4a42-a096-75439a7b8ec1}">
+      <Declaration><![CDATA[// Is the given process used by the current station configuration?
+METHOD IsProcessUsed : BOOL
+VAR_INPUT
+    this_process : REFERENCE TO FB_AUT_ABSTRACT;
+END_VAR
+VAR
+	i : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsProcessUsed := THIS^._WorkStationList.IsProcessUsed(this_process);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetAllScenario" Id="{0a5392ea-83a4-43a8-8809-208b7b2e49ea}">
+      <Declaration><![CDATA[METHOD SetAllScenario : REFERENCE TO FB_MoverMan
+VAR_INPUT
+END_VAR
+VAR
+	i : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    THIS^._StationList[i].ApproachScenario := THIS^.HMI_Scenario;
+END_FOR
+
+SetAllScenario REF= THIS^;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetAllTimers" Id="{9510fb8d-2798-43e3-8c46-2fda28470d14}">
+      <Declaration><![CDATA[// Give a random time for each process. It ensure at least the minimum and the maximum value are given
+// to at least 2 diffrents process
+METHOD SetAllTimers : REFERENCE TO FB_MoverMan
+VAR_INPUT
+    arrStationTime : POINTER TO DINT;
+    udiOffset      : UDINT; // simple offset to apply to the seed
+END_VAR
+VAR
+    i         : INT;
+    rand      : DRAND;
+    tempIndex : INT := 0;
+    getTime   : GETSYSTEMTIME;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF arrStationTime <> 0 THEN
+	
+    getTime();
+    rand.Seed := TO_INT(getTime.timeLoDW + udiOffset);
+
+    FOR i := 0 TO CONST.STATION_NUMBER - 1 BY 1 DO
+        rand();
+        arrStationTime[i] := TO_DINT((THIS^.HMI_TimeMax - THIS^.HMI_TimeMin) * (rand.Num) + THIS^.HMI_TimeMin);
+    END_FOR
+
+    tempIndex := 0;
+
+    FOR i := 1 TO CONST.STATION_NUMBER - 1 BY 1 DO
+        IF arrStationTime[i] < arrStationTime[tempIndex] THEN
+            tempIndex := i;
+        END_IF
+    END_FOR
+
+    arrStationTime[tempIndex] := THIS^.HMI_TimeMin;
+
+    tempIndex := 0;
+
+    FOR i := 1 TO CONST.STATION_NUMBER - 1 BY 1 DO
+        IF arrStationTime[i] > arrStationTime[tempIndex] THEN
+            tempIndex := i;
+        END_IF
+    END_FOR
+
+    arrStationTime[tempIndex] := THIS^.HMI_TimeMax;
+END_IF
+
+SetAllTimers REF= THIS^;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ToString" Id="{4e88ac74-66ec-4fa0-af41-d4b82c4e1634}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_MoverMan_', TO_STRING(THIS^._iID));]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

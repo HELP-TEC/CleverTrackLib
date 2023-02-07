@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="EqualApproximately" Id="{522efbc7-324d-49fa-bc51-9819fad23d1a}" SpecialFunc="None">
+    <Declaration><![CDATA[(*approximatelyEqual gives whether the difference between a and b is smaller than the acceptable
+ error (epsilon), determined by the larger of a or b. This means that the two values are 
+"close enough", and we can say that they're approximately equal.*)
+FUNCTION EqualApproximately
+VAR_INPUT
+    a       : LREAL;
+    b       : LREAL;
+    epsilon : LREAL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF ABS(a) < ABS(b) THEN
+    EqualApproximately := ABS(a - b) <= (ABS(b) * epsilon);
+ELSE
+    EqualApproximately := ABS(a - b) <= (ABS(a) * epsilon);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="EqualApproximately">
+      <LineId Id="79" Count="4" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

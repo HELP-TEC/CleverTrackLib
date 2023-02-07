@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="DistToTravel" Id="{55aa1e87-f348-47c2-aeed-49f339215e5e}" SpecialFunc="None">
+    <Declaration><![CDATA[// Get the distance to travel from startPos to stopPos
+FUNCTION DistToTravel : LREAL
+VAR_INPUT
+    startPos : LREAL;
+    stopPos  : LREAL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF startPos > stopPos THEN
+    DistToTravel := stopPos - startPos + CONST.MAX_TRACK_LENGTH;
+ELSE
+    DistToTravel := stopPos - startPos;
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

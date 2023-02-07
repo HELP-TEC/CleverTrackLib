@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="PRG" Id="{ae4b8868-a350-405b-a389-1e9bc7fcec87}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    st105_aut  : FB_AUT_LOAD;   // Laden Filtergehäuse
+    st110_aut  : FB_AUT_LOAD;   // Laden RFID-Ring
+    st115_aut  : FB_AUT_LOAD;   // Laden kristal
+    st120_aut  : FB_AUT_LOAD;   // Laden Solerohr
+    st125_aut  : FB_AUT_LOAD;   // Laden filterhut
+    st130_aut  : FB_AUT_MODIFY; // Dosieren A
+    st135_aut  : FB_AUT_MODIFY; // Dosieren B
+    st140_aut  : FB_AUT_MODIFY; // Niveaukontrolle
+    st145_aut  : FB_AUT_LOAD;   // Laden Patronendeckel
+    st150_aut : FB_AUT_MODIFY; // Utralson A
+    st155_aut : FB_AUT_MODIFY; // Ultrason B
+    st160_aut : FB_AUT_MODIFY; // Prüfig A
+    st165_aut : FB_AUT_MODIFY; // Prüfig B
+    st170_aut : FB_AUT_MODIFY; // Program RFID
+    st175_aut : FB_AUT_MODIFY; // Laser A
+    st176_aut : FB_AUT_MODIFY; // Laser B
+    st180_aut : FB_AUT_UNLOAD; // Entladen schlecht
+    st185_aut : FB_AUT_UNLOAD; // Entladen gut
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

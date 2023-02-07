@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="POU_ERR_VORLAGE" Id="{4c3ba01f-ae56-44fb-a679-3a359194d6d2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM POU_ERR_VORLAGE
+(****************************************************************************************)
+(*	POU_ERR_zxx			Alarme Station zxx	    										*)
+(*	Status				ungetestet                         								*)
+(*  Version:			1.0																*)
+(*																						*)
+(* 	25.09.2019/Dj																		*)
+(***********************************Revisionen*******************************************)
+(*	dd.mm.yyyy   KZ    x.y			Beschrieb											*)
+(****************************************************************************************)
+VAR_INPUT
+	xIN_QUIT			: BOOL;										// Alarm quittieren
+	pstrArIN_ALARM		: POINTER TO ARRAY[1..32] OF structAlarm; 	// Array Alarmstruktur
+END_VAR
+VAR_OUTPUT
+	xOUT_AL_ST		: BOOL;								// Alarm Station aktiv
+END_VAR
+VAR
+	//Alarmbaustein
+	_FB_ALARM_ST : FB_ALARM32;	
+	//Local
+	iIndex	: INT;				// Index For Schleife	
+	sStation : STRING := '';	// Station #
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(********************** INITIALISIERE VARIABLEN ****************************)
+	FOR iIndex := 1 TO 32 DO
+		pstrArIN_ALARM^[iIndex].xAlarmIN := FALSE;
+		pstrArIN_ALARM^[iIndex].xAlarmOFF := FALSE;
+		pstrArIN_ALARM^[iIndex].xAlarmSAVE := TRUE;
+		pstrArIN_ALARM^[iIndex].xAlarmQUIT := xIN_QUIT;
+		pstrArIN_ALARM^[iIndex].tAlarmVERZ := T#100MS;
+		//pstrArIN_ALARM^[iIndex].sAlarmText := '';
+		pstrArIN_ALARM^[iIndex].bAlarmNr := 0;
+	END_FOR
+(********************** ALARME ****************************)
+	(*1: *)
+	pstrArIN_ALARM^[1].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[1].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.01');
+	pstrArIN_ALARM^[1].bAlarmNr := 0;
+	(*2: *)
+	pstrArIN_ALARM^[2].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[2].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.02');
+	pstrArIN_ALARM^[2].bAlarmNr := 0;
+	(*3: *)
+	pstrArIN_ALARM^[3].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[3].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.03');
+	pstrArIN_ALARM^[3].bAlarmNr := 0;
+	(*4: *)
+	pstrArIN_ALARM^[4].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[4].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.04');
+	pstrArIN_ALARM^[4].bAlarmNr := 0;
+	(*5: *)
+	pstrArIN_ALARM^[5].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[5].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.05');
+	pstrArIN_ALARM^[5].bAlarmNr := 0;
+	(*6: *)
+	pstrArIN_ALARM^[6].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[6].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.06');
+	pstrArIN_ALARM^[6].bAlarmNr := 0;
+	(*7: *)
+	pstrArIN_ALARM^[7].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[7].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.07');
+	pstrArIN_ALARM^[7].bAlarmNr := 0;
+	(*8: *)
+	pstrArIN_ALARM^[8].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[8].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.08');
+	pstrArIN_ALARM^[8].bAlarmNr := 0;
+	(*9: *)
+	pstrArIN_ALARM^[9].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[9].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.09');
+	pstrArIN_ALARM^[9].bAlarmNr := 0;
+	(*10: *)
+	pstrArIN_ALARM^[10].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[10].sAlarmText := CONCAT(CONCAT('FEHLER ENDLAGE',sStation), '.10');
+	pstrArIN_ALARM^[10].bAlarmNr := 0;
+	(*11: *)
+	pstrArIN_ALARM^[11].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[11].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[11].bAlarmNr := 0;
+	(*12: *)
+	pstrArIN_ALARM^[12].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[12].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[12].bAlarmNr := 0;
+	(*13: *)
+	pstrArIN_ALARM^[13].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[13].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[13].bAlarmNr := 0;
+	(*14: *)
+	pstrArIN_ALARM^[14].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[14].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[14].bAlarmNr := 0;
+	(*15: *)
+	pstrArIN_ALARM^[15].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[15].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[15].bAlarmNr := 0;
+	(*16: *)
+	pstrArIN_ALARM^[16].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[16].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[16].bAlarmNr := 0;
+	(*17: *)
+	pstrArIN_ALARM^[17].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[17].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[17].bAlarmNr := 0;
+	(*18: *)
+	pstrArIN_ALARM^[18].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[18].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[18].bAlarmNr := 0;
+	(*19: *)
+	pstrArIN_ALARM^[19].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[19].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[19].bAlarmNr := 0;
+	(*20: *)
+	pstrArIN_ALARM^[20].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[20].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[20].bAlarmNr := 0;
+	(*21: *)
+	pstrArIN_ALARM^[21].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[21].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[21].bAlarmNr := 0;
+	(*22: *)
+	pstrArIN_ALARM^[22].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[22].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[22].bAlarmNr := 0;
+	(*23: *)
+	pstrArIN_ALARM^[23].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[23].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[23].bAlarmNr := 0;
+	(*24: *)
+	pstrArIN_ALARM^[24].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[24].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[24].bAlarmNr := 0;
+	(*25: *)
+	pstrArIN_ALARM^[25].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[25].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[25].bAlarmNr := 0;
+	(*26: *)
+	pstrArIN_ALARM^[26].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[26].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[26].bAlarmNr := 0;
+	(*27: *)
+	pstrArIN_ALARM^[27].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[27].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[27].bAlarmNr := 0;
+	(*28: *)
+	pstrArIN_ALARM^[28].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[28].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[28].bAlarmNr := 0;
+	(*29: *)
+	pstrArIN_ALARM^[29].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[29].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[29].bAlarmNr := 0;
+	(*30: *)
+	pstrArIN_ALARM^[30].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[30].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[30].bAlarmNr := 0;
+	(*31: *)
+	pstrArIN_ALARM^[31].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[31].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[31].bAlarmNr := 0;
+	(*32: *)
+	pstrArIN_ALARM^[32].xAlarmIN := FALSE;
+	pstrArIN_ALARM^[32].sAlarmText := CONCAT(CONCAT('FEHLER ',sStation), '');
+	pstrArIN_ALARM^[32].bAlarmNr := 0;
+
+(********************** ALARM FB ****************************)
+_FB_ALARM_ST(pstrArIN_Alarm:= pstrArIN_ALARM);
+
+
+
+(********************** ALARM FB ****************************)	
+	xOUT_AL_ST := FALSE;
+	FOR iIndex := 1 TO 32 DO
+		IF pstrArIN_ALARM^[iIndex].xAlarmOUT THEN
+			xOUT_AL_ST := TRUE;
+		END_IF
+	END_FOR]]></ST>
+    </Implementation>
+    <LineIds Name="POU_ERR_VORLAGE">
+      <LineId Id="30" Count="9" />
+      <LineId Id="204" Count="131" />
+      <LineId Id="171" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

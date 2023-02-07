@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_ReadJSON" Id="{2c20b591-6e1e-47a9-9cd2-1b0bc13d2a9c}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'c++_compatible'}
+FUNCTION_BLOCK FB_ReadJSON IMPLEMENTS ITcJsonSaxHandler
+VAR_INPUT
+    myArrayInput1 : REFERENCE TO ARRAY[1..CONSt.STATION_NUMBER] OF DINT;
+    myArrayInput2 : REFERENCE TO ARRAY[1..CONSt.STATION_NUMBER] OF DINT;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+    iArrayIndex : INT;
+	iArrayNumber : INT := 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+]]></ST>
+    </Implementation>
+    <Method Name="OnBool" Id="{9a4d5a14-73d8-44e6-925f-276a9b7a4d99}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnBool : HRESULT
+VAR_INPUT
+	value	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnDint" Id="{b50830c8-627a-42de-8983-471ff1c6c0a0}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnDint : HRESULT
+VAR_INPUT
+	value	: DINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnEndArray" Id="{f64908a6-37c0-4edc-b132-7a23c8c64f09}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnEndArray : HRESULT
+VAR_INPUT
+	elementCount	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[OnEndArray := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnEndObject" Id="{3852d89c-fafd-4e01-bb18-7e78a637b1f3}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnEndObject : HRESULT
+VAR_INPUT
+	memberCount	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[OnEndObject := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnKey" Id="{ceb41c6f-bffd-4d12-bea7-c139a1d358a7}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnKey : HRESULT
+VAR_IN_OUT CONSTANT
+	key	: STRING;
+END_VAR
+VAR_INPUT
+	len	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[OnKey := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnLint" Id="{265a7821-0589-4d69-be9b-1f75863bafc1}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnLint : HRESULT
+VAR_INPUT
+	value	: LINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnLreal" Id="{a38012a6-8871-46f1-88df-17f437ec3332}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnLreal : HRESULT
+VAR_INPUT
+	value	: LREAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnNull" Id="{2fe6e22a-8431-4936-b402-09d666003baf}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnNull : HRESULT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnRawNumber" Id="{d9e128aa-0db5-4660-b480-33da9c1c4a78}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnRawNumber : HRESULT
+VAR_IN_OUT CONSTANT
+	value	: STRING;
+END_VAR
+VAR_INPUT
+	len	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnStartArray" Id="{6c0f6252-223d-47ac-9480-6434f3021583}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnStartArray : HRESULT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.iArrayIndex := 1;
+THIS^.iArrayNumber := THIS^.iArrayNumber + 1;
+OnStartArray := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnStartObject" Id="{154319f1-7500-4601-a5ac-3b43c0d5ae1f}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnStartObject : HRESULT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[OnStartObject := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnString" Id="{0b5aa270-bf48-441d-8d33-34dbae61aa92}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnString : HRESULT
+VAR_IN_OUT CONSTANT
+	value	: STRING;
+END_VAR
+VAR_INPUT
+	len	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnUdint" Id="{c3184c14-0ac5-463f-88be-67260d5beb5f}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnUdint : HRESULT
+VAR_INPUT
+	value	: UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^.iArrayNumber = 1 THEN
+    THIS^.myArrayInput1[THIS^.iArrayIndex] := TO_DINT(value);
+    THIS^.iArrayIndex                      := THIS^.iArrayIndex + 1;
+ELSIF THIS^.iArrayNumber = 2 THEN
+    THIS^.myArrayInput2[THIS^.iArrayIndex] := TO_DINT(value);
+    THIS^.iArrayIndex                      := THIS^.iArrayIndex + 1;
+END_IF
+OnUdint := S_OK;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OnUlint" Id="{d82d5f58-11ea-4618-a7f0-e07444bf9b7e}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD OnUlint : HRESULT
+VAR_INPUT
+	value	: ULINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcAddRef" Id="{18707b48-7fec-4fa6-9f12-d207fcb3eb6f}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD TcAddRef : UDINT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcQueryInterface" Id="{16562a11-f047-4804-80e4-ce6a68573a0b}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD TcQueryInterface : HRESULT
+VAR_INPUT
+	iid	: REFERENCE TO IID;
+	pipItf	: POINTER TO PVOID;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TcRelease" Id="{b6583a91-d3cd-4b37-989f-1b67963bf2ea}">
+      <Declaration><![CDATA[{attribute 'TcTypeSystem'}
+{attribute 'no-analysis'}
+{attribute 'c++_compatible'}
+{attribute 'minimal_input_size' := '4'}
+{attribute 'pack_mode' := '4'}
+METHOD TcRelease : UDINT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

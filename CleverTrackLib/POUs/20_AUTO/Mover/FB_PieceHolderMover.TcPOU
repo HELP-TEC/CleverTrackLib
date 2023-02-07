@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_PieceHolderMover" Id="{ea94a348-a553-4aa1-b9c9-75f4bb166701}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PieceHolderMover EXTENDS FB_BasePieceHolder IMPLEMENTS IObject
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	_lrPosOffset : LREAL; // current offset position
+    _Piece       : FB_My_Piece;
+	
+	_iID : INT := 0; // instance ID, is set during FB_Init using the value of _iInstanceCounter 
+END_VAR
+VAR_STAT
+	_iInstanceCounter : INT := 1; // instance counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Equals" Id="{eeaf236b-35ea-4a5a-bbec-5b0cc63caa85}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="FB_init" Id="{dcea39f7-6579-4892-bc5b-1bef8d12c0fe}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+    bInitRetains : BOOL;  // if TRUE, the retain variables are initialized (warm start / cold start)
+    bInCopyCode  : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+    offset       : LREAL; //position offset of the tool using this toolhead, a negative value represents a move on the left
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._iID := THIS^._iInstanceCounter;
+THIS^._iInstanceCounter := THIS^._iInstanceCounter +1;
+THIS^.PosOffset := 0;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetPiece" Id="{f4c97cc6-88dc-4e16-aa2b-781a49f99eac}">
+      <Declaration><![CDATA[METHOD PUBLIC  GetPiece : REFERENCE TO FB_My_Piece
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GetPiece REF= THIS^._Piece;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="PosOffset" Id="{c652958a-fde0-48e3-8f7b-eecb3ca38f54}">
+      <Declaration><![CDATA[PROPERTY PosOffset : LREAL]]></Declaration>
+      <Get Name="Get" Id="{9052c14a-82c9-46c4-8999-d16a3701cd55}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[PosOffset := _lrPosOffset;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{4df070d7-14ad-4ffb-a130-5439b4454073}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_lrPosOffset := PosOffset;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="ToString" Id="{6027b817-41c2-4222-8d29-3d9666d112ad}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[ToString := CONCAT('FB_PieceHolder_', TO_STRING(THIS^._iID));]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

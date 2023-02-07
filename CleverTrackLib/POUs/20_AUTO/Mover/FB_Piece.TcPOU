@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Piece" Id="{e897e702-4cea-4eb8-92ad-5f5c6b9e7250}" SpecialFunc="None">
+    <Declaration><![CDATA[(* Abstract piece, need to be implemented 
+ * for you project needs *)
+FUNCTION_BLOCK PUBLIC FB_Piece
+VAR
+    _Exist           : BOOL := FALSE;
+    _State           : PieceState_e;
+    _LastStationDone : INT    := 0;
+    _ErrorMessage    : STRING := '';
+
+    _MarkMessage : STRING := ''; // use to know what is the message engraved in the piece
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Equals" Id="{0acf6014-46e5-4e6c-ba5a-33a0cf546704}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+    object : ANY;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Equals := THIS = object.pValue;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Exist" Id="{6934f3c9-f21b-432b-9637-c10813f60c36}">
+      <Declaration><![CDATA[PROPERTY PUBLIC Exist : BOOL]]></Declaration>
+      <Get Name="Get" Id="{8218de1c-d966-41a6-b8aa-75ba9f6d6f14}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Exist := THIS^._Exist;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="GetErrorMessage" Id="{e7180263-47ac-4487-a018-ec04c653a986}">
+      <Declaration><![CDATA[METHOD PUBLIC GetErrorMessage : STRING
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._Exist THEN
+	GetErrorMessage := THIS^._ErrorMessage;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetLastStationDone" Id="{3e06aeeb-8331-4e6c-b7db-342a8686aaa1}">
+      <Declaration><![CDATA[// Return the last station done
+// The number returned is always positive
+// Use IsBad() to know if a piece is bad
+METHOD PUBLIC GetLastStationDone : INT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._Exist THEN
+    GetLastStationDone := ABS(THIS^._LastStationDone);
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsBad" Id="{b2961915-c18f-4186-9f8d-c18efa632034}">
+      <Declaration><![CDATA[METHOD PUBLIC IsBad : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._Exist THEN
+    IsBad := (THIS^._LastStationDone < 0) OR (LEN(THIS^._ErrorMessage) > 0) OR (PieceState_e.bad = THIS^._State);
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IsPieceInWorkingState" Id="{792523a1-9081-4d13-9e5f-ca4e13441e0b}">
+      <Declaration><![CDATA[METHOD PUBLIC IsPieceInWorkingState : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IsPieceInWorkingState := FALSE;
+
+IF THIS^._Exist THEN
+    IsPieceInWorkingState := PieceState_e.working = THIS^._State;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Load" Id="{2a9219c3-947b-4559-a770-0e0bf1f09af7}">
+      <Declaration><![CDATA[// Load a piece inside the pieceholder. The flag _Exists is set
+METHOD PUBLIC Load : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^._Exist := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Mark" Id="{9f9880e3-7f0b-4589-b322-02bb77a93835}">
+      <Declaration><![CDATA[METHOD PUBLIC Mark : BOOL
+VAR_INPUT
+    Message : STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._Exist THEN
+    THIS^._MarkMessage := Message;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetErrorMessage" Id="{167e0616-4895-4547-ba9b-187c5fa3383e}">
+      <Declaration><![CDATA[METHOD PUBLIC SetErrorMessage : BOOL
+VAR_INPUT
+	ErrorMessage : STRING;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF LEN(THIS^._ErrorMessage) > 0 THEN
+    SetErrorMessage := FALSE;
+ELSE
+	THIS^._ErrorMessage := ErrorMessage;
+    THIS^.SetLastStation(- THIS^._LastStationDone);
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetLastStation" Id="{0598ec61-7f1e-4182-b1d8-099cd2a012f8}">
+      <Declaration><![CDATA[/// Set the last station done
+/// Call this method only once during the your process
+/// This method will automatically update the piece state
+/// from the Working state to the good or bad state depending of the error state
+METHOD PUBLIC SetLastStation : BOOL
+VAR_INPUT
+    value : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF THIS^._Exist THEN
+    IF ABS(value) < ABS(THIS^._LastStationDone) THEN
+        SetLastStation := FALSE;
+    ELSE
+        IF THIS^._LastStationDone < 0 THEN
+            value := 0 - ABS(value);
+        END_IF
+
+        THIS^._LastStationDone := value;
+
+        IF THIS^._LastStationDone >= 0 THEN
+            THIS^._State := PieceState_e.good;
+        ELSE
+            THIS^._State := PieceState_e.bad;
+        END_IF
+
+        SetLastStation := TRUE;
+    END_IF
+ELSE
+    SetLastStation := FALSE;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="StartWorking" Id="{3123d658-5d14-40c2-8eae-596577d049c9}">
+      <Declaration><![CDATA[METHOD PUBLIC StartWorking : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF PieceState_e.good = THIS^._State THEN
+    THIS^._State := PieceState_e.working;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="UnloadPiece" Id="{9a423c38-edca-4159-8996-a0b5a35b1183}">
+      <Declaration><![CDATA[METHOD PUBLIC UnloadPiece : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[_Exist           := FALSE;
+_State           := PieceState_e.good;
+_LastStationDone := 0;
+_ErrorMessage    := '';
+_MarkMessage     := '';
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

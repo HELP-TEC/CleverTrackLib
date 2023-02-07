@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="SaveInMemory" Id="{775105ca-9365-4054-8101-5ff720f6736e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION SaveInMemory : BOOL
+VAR_INPUT
+    sData : REFERENCE TO STRING(2000);
+END_VAR
+VAR
+    fbJson     : FB_JsonSaxWriter;
+    i          : int;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbJson.ResetDocument();
+// global object
+fbJson.StartObject();
+fbJson.AddKey('StationTimeArray');
+
+// array1
+fbJson.StartObject();
+fbJson.AddKey('StationTime1');
+fbJson.StartArray();
+
+FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    fbJson.AddDint(PERS.iStationTimeDef1[i]);
+END_FOR
+
+fbJson.EndArray();
+
+// array2
+fbJson.AddKey('StationTime2');
+fbJson.StartArray();
+
+FOR i := 1 TO CONST.STATION_NUMBER BY 1 DO
+    fbJson.AddDint(PERS.iStationTimeDef2[i]);
+END_FOR
+
+fbJson.EndArray();
+fbJson.EndObject();
+
+fbJson.EndObject();
+// end global object
+
+// end of file
+sData := fbJson.GetDocument();
+
+fbJson.ResetDocument();
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

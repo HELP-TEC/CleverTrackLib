@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_FileMan" Id="{b446d242-69ea-493d-bc0e-2e973a117e80}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FileMan
+VAR_INPUT
+    sPathName   : STRING; //
+    bSave       : BOOL;
+    bLoad       : BOOL;
+    sRefString  : POINTER TO STRING(2000);
+    uiStringLen : DINT; // string length
+END_VAR
+VAR_OUTPUT
+    bError   : BOOL;  // true when a FB is in error (all fb are mixed here)
+    nErrorId : UDINT; // the error id from the fb in error (all fb are mixed here)
+
+    currentState : INT; // current state of this FB, use it for debug
+END_VAR
+VAR
+    fb_open  : FB_FileOpen;
+    fb_write : FB_FileWrite;
+    fb_read  : FB_FileRead;
+    fb_close : FB_FileClose;
+    hFile    : UINT; // file number holder for write operation
+    state    : INT := 0;
+
+    bOpState : INT;   //0 = saving operation, 1 = loading operation, other = error
+    nMode    : DWORD; // file open monde, depending on the command
+
+    byteRead : UDINT; //number of byte read so far
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE state OF
+
+0: (* wait for operation *)
+    IF bSave THEN
+        state    := 1;
+        bOpState := 0;
+        nMode    := FOPEN_MODEWRITE;
+    ELSIF bLoad THEN
+        state    := 1;
+        bOpState := 1;
+        nMode    := FOPEN_MODEREAD;
+    END_IF
+
+1: (* open *)
+    fb_open(sNetId    := '',
+            sPathName := sPathName,
+            nMode     := nMode,
+            ePath     := PATH_GENERIC,
+            bExecute  := TRUE,
+            tTimeout  := T#3S,
+            bBusy     =>,
+            bError    =>,
+            nErrId    =>,
+            hFile     => hFile);
+
+    IF NOT fb_open.bBusy THEN
+        fb_open(bExecute := FALSE);
+
+        IF 0 = bOpState THEN
+            state := 3;
+        ELSIF 1 = bOpState THEN
+            state    := 5;
+            byteRead := 0;
+        END_IF
+    END_IF
+
+3: (* write *)
+    fb_write(sNetId     := '',
+             hFile      := hFile,
+             pWriteBuff := sRefString,
+             cbWriteLen := TO_UDINT(uiStringLen),
+             bExecute   := TRUE,
+             tTimeout   := T#3S,
+             bBusy      =>,
+             bError     =>,
+             nErrId     =>,
+             cbWrite    =>);
+
+    IF NOT fb_write.bBusy THEN
+        fb_write(bExecute := FALSE);
+        state := 10;
+    END_IF
+
+5: (* read 100 bytes *)
+    IF fb_read.bEOF THEN
+        state := 9;
+    ELSE
+        fb_read(sNetId    := '',
+                hFile     := hFile,
+                pReadBuff := sRefString,
+                cbReadLen := TO_UDINT(uiStringLen),
+                bExecute  := TRUE,
+                tTimeout  :=,
+                bBusy     =>,
+                bError    =>,
+                nErrId    =>,
+                cbRead    => byteRead,
+                bEOF      =>);
+
+        state := 6;
+    END_IF
+
+6: (* open *)
+    fb_read(bExecute := FALSE);
+    state := 5;
+
+9:
+    state := 10;
+
+10: (* open *)
+    fb_close(sNetId   := '',
+             hFile    := hFile,
+             bExecute := TRUE,
+             tTimeout := T#3S,
+             bBusy    =>,
+             bError   =>,
+             nErrId   =>);
+
+    IF NOT fb_close.bBusy AND NOT bSave AND NOT bLoad THEN
+        fb_close(bExecute := FALSE);
+        state := 0;
+    END_IF
+
+END_CASE
+
+bError       := fb_open.bError OR fb_write.bError OR fb_read.bError OR fb_close.bError;
+nErrorId     := fb_open.nErrId OR fb_write.nErrId OR fb_read.nErrId OR fb_close.nErrId;
+currentState := state;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FileMan">
+      <LineId Id="2225" Count="98" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

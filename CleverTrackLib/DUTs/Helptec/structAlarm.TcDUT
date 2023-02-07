@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.18">
+  <DUT Name="structAlarm" Id="{1e9ea97c-e62d-4967-92d0-b39c1db2853d}">
+    <Declaration><![CDATA[TYPE structAlarm :
+STRUCT
+	xAlarmIN	:	BOOL;	//Alarm Trigger
+	xAlarmOFF	:	BOOL;	//Alarm übersteuert (wird nicht ausgelöst)
+	xAlarmSAVE	:	BOOL;	//Alarm gespeichert (muss quittiert werden)
+	xAlarmQUIT	:	BOOL;	//Alarm quittieren
+	xAlarmOUT	:	BOOL;	//Alarm aktiv
+	tAlarmVERZ	:	TIME;	//Alarmverzögerung
+	sAlarmText	:	STRING;	//Alarmtext
+	bAlarmNr	:	BYTE;	//Zusatztext #
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

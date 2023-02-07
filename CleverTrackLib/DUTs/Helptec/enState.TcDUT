@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="enState" Id="{daca11a6-0239-45ff-94d2-a68ebcd3caac}">
+    <Declaration><![CDATA[{attribute 'to_string'}
+TYPE enState :
+	//	MACHINE STATE
+(
+	StateOFF	,		(*0	OFF 		PLC STARTUP, EMERGENCY STOP	*)
+	StateAIRon	,		(*1	AIR OK		AIRPRESSURE ON	 	*)
+	StateENGIZED,		(*2	ENERGY OK	ENERGY/SECURITY CIRQUIT CLOSED	*)
+	StateREF	,		(*3	HOMING		SYSTEM INITIAL RESET (HOMING AXIS ETC) *)
+	StateMANU	,		(*4	MANUEL		MANUEL MODE (TEACH AXIS, MANEL MOVEMENT	*)
+	StateINIT	,		(*5	INITIALISE	SYSTEM RESET 	*)
+	StateREADY	,		(*6	READY		SYSTEM READY TO START	*)
+	StateSTOP	,		(*7	STOP		SYSTEM STOPPED	*)
+	StateALARM	,		(*8	ALARM		ALARM ACTIV	*)
+	StateSTEP	,		(*9	STEP		STEP BY STEP MODE	*)
+	StateEND	,		(*10 END		END MODE (FINISH ALL CYCLES	*)
+	StateLEER	,		(*11 EMPTY		RUNNING TILL EMPTY STATE *)
+	StateAUTO			(*12 RUN		RUNNING AUTOMATIC MODE	*)
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="BR_PaletteCmd_t" Id="{0db1c6b5-180e-45c7-abae-18cd723234ae}">
+    <Declaration><![CDATA[{attribute 'pack_mode=1'}
+TYPE BR_PaletteCmd_t :
+STRUCT
+    cmd        : PaletteCmd_bits_t;
+    nextTarget : USINT;
+    offset     : ARRAY[0..2] OF USINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="ISimuMoverTimers" Id="{3e53b767-d3d2-4389-aa58-689aee3700ca}">
+    <Declaration><![CDATA[INTERFACE ISimuMoverTimers
+]]></Declaration>
+    <Property Name="iProcessTimeMili_1" Id="{95fde85c-bbc4-4cb5-9a08-b37d126c45a2}">
+      <Declaration><![CDATA[(* Process time, expressed in milisecond *)
+PROPERTY iProcessTimeMili_1 : DINT
+]]></Declaration>
+      <Get Name="Get" Id="{36e04da1-42a2-429b-9de7-941b895c5058}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{723b9ade-9811-4fe8-b6c2-b252c87ee592}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="iProcessTimeMili_2" Id="{05f2560d-f644-4bcc-ad56-a3633e8c0234}">
+      <Declaration><![CDATA[(* Process time, expressed in milisecond *)
+PROPERTY iProcessTimeMili_2 : DINT]]></Declaration>
+      <Get Name="Get" Id="{72fd3eb1-7d04-4447-82d7-70073cfb14b8}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{c93dd4f8-ff10-4fd0-b05c-0ac694b56dc7}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>

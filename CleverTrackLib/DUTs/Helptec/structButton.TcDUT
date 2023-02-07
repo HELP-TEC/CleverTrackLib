@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.16">
+  <DUT Name="structButton" Id="{d4c6a66b-2729-4340-b600-b349f70d0b1a}">
+    <Declaration><![CDATA[TYPE structButton :
+STRUCT
+	button	:	BOOL;	// BUTTON SIGNAL FROM HMI
+	disable	:	BOOL;	// FORCE BUTTON INACTIV
+	rtrig	:	BOOL;	// RISING EDGE
+	ftrig	:	BOOL;	// FALLING EDGE
+	press	:	BOOL;	// BUTTON PRESSED
+	on		:	BOOL;	// FUNCTION ON (GREEN)
+	error	:	BOOL;	// FUNCTION ERROR (RED)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

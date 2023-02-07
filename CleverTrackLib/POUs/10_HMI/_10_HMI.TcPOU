@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="_10_HMI" Id="{e5cce500-3567-456b-b873-631e9b00989b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM _10_HMI
+(****************************************************************************)
+//HMI PROGRAMM
+//	- HMI RELEVANTE Signale und Funktionen
+//
+//	04.09.2019/Dj
+//
+//	Version:
+(****************************************************************************)
+
+VAR
+	//Startup HMI-Panel
+	TON_startup		:	TON;
+	
+	//Reset Counter
+	TON_ResetCounter			: 	TON;			// Reset Temparary Counter
+	
+	//Ticker
+	TICK6M						:	TP;				// Ticker for Operating Hours
+	TICK6M_						: 	TP;
+	x_TICK6M					:	BOOL;	
+	BLINK_500					: 	TP;				// Ticker for Operating Hours
+	BLINK_500_					: 	TP;
+	x_BLINK_500					: 	BOOL;
+	
+	BLINK_100					: 	TP;				// Ticker for Operating Hours
+	BLINK_100_					: 	TP;
+	x_BLINK_100					: 	BOOL;	
+	
+	//Cycle Time
+	_FB_SystemTime				: 	GETSYSTEMTIME;
+	dw_ActTime					: 	DWORD;
+	
+	//Lampen
+	_FB_LAMPE					: FB_LampeBNI007F;
+	
+	
+	//Alarmlog
+	iCount6h					: 	INT;			//6h Ticker (für AlarmLOG)
+	rtNOTAUS					:	R_TRIG;			//Trigger 6h	
+	
+	//Divers
+	idx							:	INT;			//Index
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//***********************************************************************************************)
+//Startup Terminal
+//***********************************************************************************************)
+TON_Startup(IN := TRUE, PT := T#5S);
+
+//***********************************************************************************************)
+//Parameter ÜBERPRÜFEN
+//***********************************************************************************************)
+_11_PAR_CHK();
+
+//***********************************************************************************************)
+//State
+//***********************************************************************************************)
+_14_STATE();
+
+//***********************************************************************************************)
+//Lampen
+//***********************************************************************************************)
+_FB_LAMPE(enIN_State     := HMI.enState,
+          xIN_AlarmAktiv := PRG.st105_aut.xOUT_ErrFlag OR
+                            PRG.st110_aut.xOUT_errFlag OR
+                            PRG.st115_aut.xOUT_errFlag OR
+                            PRG.st120_aut.xOUT_errFlag OR
+                            PRG.st125_aut.xOUT_errFlag OR
+                            PRG.st130_aut.xOUT_errFlag OR
+                            PRG.st135_aut.xOUT_errFlag OR
+                            PRG.st140_aut.xOUT_errFlag OR
+                            PRG.st145_aut.xOUT_errFlag OR
+                            PRG.st150_aut.xOUT_errFlag OR
+                            PRG.st155_aut.xOUT_errFlag OR
+                            PRG.st160_aut.xOUT_errFlag OR
+                            PRG.st165_aut.xOUT_errFlag OR
+                            PRG.st170_aut.xOUT_errFlag OR
+                            PRG.st175_aut.xOUT_errFlag OR
+                            PRG.st176_aut.xOUT_errFlag OR
+                            PRG.st180_aut.xOUT_errFlag OR
+                            PRG.st185_aut.xOUT_errFlag,
+          xIN_SafetyError := FALSE,
+          xIN_NotAus      := FALSE,
+          xIN_Mel1        :=,
+          xIN_Mel2        :=,
+          xIN_Mel3        :=,
+          xIN_Mel4        :=,
+          xIN_Mel5        :=,
+          xIN_Mel6        :=,
+          xIN_Mel7        :=,
+          tIN_Meldungen   := T#1000MS,
+          tIN_Impuls      := T#500ms,
+          xOUT_ErrFlag    =>);
+
+//BALLUFF LAMPE
+//OUT.QW194A3:=_FB_LAMPE.wOUT_Lampe;
+//OUT.QW194A6:=_FB_LAMPE.wOUT_Lampe;
+//OUT.Q194A3_SycStart:=_FB_LAMPE.xOUT_SyncStart;
+//OUT.Q194A6_SycStart:=_FB_LAMPE.xOUT_SyncStart;
+//OUT.Q194A3_SycImp:=_FB_LAMPE.xOUT_SyncImp;
+//OUT.Q194A6_SycImp:=_FB_LAMPE.xOUT_SyncImp;
+//LAMPE ENERGIE EIN 
+(*
+OUT.Q000_LAMP_NRJ:= _10_HMI.x_BLINK_500 AND 
+						//Notaus Schalter
+						_02_Safety.bArIN_Input[1].4 AND
+						_02_Safety.bArIN_Input[2].0 AND	
+						_02_Safety.bArIN_Input[2].2 AND
+						_02_Safety.bArIN_Input[2].4 AND
+						_02_Safety.bArIN_Input[2].6 
+					OR (HMI.enState>enState.StateOFF);
+					*)
+
+(***********************************************************************************************)
+(* HMI Alarme*)
+(***********************************************************************************************)
+FOR idx := 1 TO 100 BY 1 DO
+    HMI.xArAlarmHMI[idx] := HMI.strArALARM[idx].xAlarmOUT;
+END_FOR
+
+FOR idx := 1 TO 100 BY 1 DO
+    HMI.xArAlarmHMI[idx + 5000] := HMI.strArMSG[idx].xAlarmOUT;
+END_FOR
+
+(***********************************************************************************************)
+(* Cycle Time *)
+(***********************************************************************************************)
+_FB_SystemTime(timeLoDW => dw_ActTime, timeHiDW =>);
+dw_ActTime := dw_ActTime AND 16#FFFF0000;
+
+(***********************************************************************************************)
+(* Operating hours  *)
+(***********************************************************************************************)
+(* 0.5' Blinker *)
+BLINK_500(IN := NOT BLINK_500_.Q, PT := T#500MS, Q => x_BLINK_500);
+BLINK_500_(IN := NOT BLINK_500.Q, PT := T#500MS);
+(* 0.1' Blinker *)
+BLINK_100(IN := NOT BLINK_100_.Q, PT := T#100MS, Q => x_BLINK_100);
+BLINK_100_(IN := NOT BLINK_100.Q, PT := T#100MS);
+(* 6' Ticker *)
+TICK6M(IN := NOT TICK6M_.Q, PT := T#1MS, Q => x_TICK6M);
+TICK6M_(IN := NOT TICK6M.Q, PT := t#6m);
+
+(* Operating hours *)
+IF TICK6M.Q THEN
+    (* AUTO *)
+    IF (HMI.enState = enState.StateAUTO) THEN
+        PERS.udiCount6Mauto := PERS.udiCount6Mauto + 1;
+        IF (PERS.udiCount6Mauto >= 10) THEN
+            PERS.udiCount6Mauto := 0;
+            PERS.udiCountHauto  := PERS.udiCountHauto + 1;
+            IF (PERS.udiCountHauto < 0) THEN
+                PERS.udiCountHauto := 0;
+            END_IF;
+        END_IF;
+    END_IF;
+
+    (* TOTAL *)
+    PERS.udiCount6Mon := PERS.udiCount6Mon + 1;
+    IF (PERS.udiCount6Mon >= 10) THEN
+        PERS.udiCount6Mon := 0;
+        PERS.udiCountHon  := PERS.udiCountHon + 1;
+        IF (PERS.udiCountHon < 0) THEN
+            PERS.udiCountHon := 0;
+        END_IF;
+    END_IF;
+
+    //6h
+    iCount6h := iCount6h + 1;
+END_IF;
+
+//Alarmlog schreiben nach 6h oder bei NOT-AUS
+//rtNOTAUS(CLK:=_02_SAFETY.xOUT_ESout);
+IF (iCount6h >= 60) OR rtNOTAUS.Q THEN
+    iCount6h        := 0;
+    HMI.xWriteALlog := NOT HMI.xWriteALlog;
+END_IF;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="Pos2D_t" Id="{412a4c90-bbde-4fda-83df-156dd4f50170}">
+    <Declaration><![CDATA[TYPE
+Pos2D_t :
+STRUCT
+    x : DINT;
+    y : DINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

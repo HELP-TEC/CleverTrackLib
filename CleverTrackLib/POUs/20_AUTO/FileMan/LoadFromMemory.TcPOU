@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="LoadFromMemory" Id="{34b1f23f-155f-4282-b68e-def4f76673a0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION LoadFromMemory : BOOL
+VAR_INPUT
+    sData : REFERENCE TO STRING(2000);
+END_VAR
+VAR
+    fbJson     : FB_JsonSaxReader;
+    pJsonParse : FB_ReadJSON;
+
+    i : int;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pJsonParse.myArrayInput1 REF= PERS.iStationTimeDef1;
+pJsonParse.myArrayInput2 REF= PERS.iStationTimeDef2;
+fbJson.Parse(sJson := sData, ipHdl := pJsonParse);
+]]></ST>
+    </Implementation>
+    <LineIds Name="LoadFromMemory">
+      <LineId Id="31" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

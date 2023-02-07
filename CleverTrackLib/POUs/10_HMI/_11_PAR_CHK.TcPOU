@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="_11_PAR_CHK" Id="{efa96d1d-2c03-4156-afdc-c03056bcae0c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM _11_PAR_CHK
+(****************************************************************************)
+//HMI PARAMETER VALIDIEREN
+//	- Achsenpositionen gültig
+//	- Achse in Position 
+//	- Achse Freilauf
+//
+//	13.09.2019/Dj
+//
+//	Version:	1.0
+(****************************************************************************)
+VAR_INPUT
+	//Axis01X1
+	rIN_TolP_01X1		: REAL;	//Toleranz+ inPOS
+	rIN_TolN_01X1		: REAL;	//Toleranz- inPOS
+	//Axis01Y2
+	rIN_TolP_01Y2		: REAL;	//Toleranz+ inPOS
+	rIN_TolN_01Y2		: REAL;	//Toleranz- inPOS
+	//Axis01Z3
+	rIN_TolP_01Z3		: REAL;	//Toleranz+ inPOS
+	rIN_TolN_01Z3		: REAL;	//Toleranz- inPOS
+	//Axis02W1
+	rIN_TolP_02W1		: REAL;	//Toleranz+ inPOS
+	rIN_TolN_02W1		: REAL;	//Toleranz- inPOS
+END_VAR
+VAR
+	bIdx				: BYTE;	//Index
+END_VAR
+VAR_OUTPUT
+	xOUT_Axis01X1valid	: BOOL;	//Axis valid
+	xOUT_Axis01Y2valid	: BOOL;	//Axis valid
+	xOUT_Axis01Z3valid	: BOOL;	//Axis valid
+	xOUT_Axis02W1valid	: BOOL;	//Axis valid
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <LineIds Name="_11_PAR_CHK">
+      <LineId Id="105" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

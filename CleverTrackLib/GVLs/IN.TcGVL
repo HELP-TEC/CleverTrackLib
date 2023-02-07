@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <GVL Name="IN" Id="{65b7ec83-7f69-49a4-8b73-6f7a70b23d37}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+(*******************************************************************)
+(* EINGÄNGE *)
+(*******************************************************************)
+	(* Modul *)
+	//-EL#
+//	I000_24VDC			AT %IX0.0		:	BOOL;			//Überwachung +24VDC
+//	I001_				AT %IX0.1		:	BOOL;			//
+//	I002_				AT %IX0.2		:	BOOL;			//    
+//	I003_		    	AT %IX0.3		:	BOOL;			//	
+//	I004_				AT %IX0.4		:	BOOL;			//Reserve
+//	I005_				AT %IX0.5		:	BOOL;			//Reserve
+//	I006_				AT %IX0.6		:	BOOL;			//Reserve    
+//	I007_				AT %IX0.7		:	BOOL;			//Reserve
+//	
+//	I010_				AT %IX1.0		:	BOOL;			//Taktsignal Presse
+//	I011_				AT %IX1.1		:	BOOL;			//Presse Bereit
+//	I012_				AT %IX1.2		:	BOOL;			//Reserve Presse
+//	I013_				AT %IX1.3		:	BOOL;			//Reserve Presse
+//	I014_				AT %IX1.4		:	BOOL;			//Reserve
+//	I015_				AT %IX1.5		:	BOOL;			//Reserve
+//	I016_				AT %IX1.6		:	BOOL;			//Reserve
+//	I017_				AT %IX1.7		:	BOOL;			//Reserve
+//	
+//	
+//	(* IO-Link Boxen *)
+//(*******************************************************************)
+//	//-5001
+//	(*Beispiel 	ST01 	Stopper Mono (nur GS), Greifer Mono, 
+//						Vereinzelung Bi, AK WT, AK Teil, STAU WF
+//	*)
+//	IB5001				AT %IB5001			:	BYTE;			//Input Byte Box 1
+//	I101_01_GS			AT %IX5001.0		:	BOOL;			//Stopper GS
+//	I101_02_UH			AT %IX5001.1		:	BOOL;			//Greifer GS
+//	I101_02_AS			AT %IX5001.2		:	BOOL;			//Greifer AS
+//	I101_03_GS			AT %IX5001.3		:	BOOL;			//Vereinzelung GS
+//	I101_03_AS			AT %IX5001.4		:	BOOL;			//Vereinzelung AS
+//	I101_WT				AT %IX5001.5		:	BOOL;			//AK WT	
+//	I101_AK				AT %IX5001.6		:	BOOL;			//AK Teil
+//	I101_STAU			AT %IX5001.7		:	BOOL;			//Stau Zuführung
+//	
+//	//-5002
+//	(*Beispiel 	ST02 	Stopper Mono (nur GS), Indexierer Mono, 
+//						Presse Mono, AK WT, AK Teil
+//	*)
+//	IB5002				AT %IB5002			:	BYTE;			//Input Byte Box 2
+//	I102_01_GS			AT %IX5002.0		:	BOOL;			//Stopper GS
+//	I102_02_GS			AT %IX5002.1		:	BOOL;			//Index GS
+//	I102_02_AS			AT %IX5002.2		:	BOOL;			//Index AS
+//	I102_03_GS			AT %IX5002.3		:	BOOL;			//Pressen GS
+//	I102_03_AS			AT %IX5002.4		:	BOOL;			//Pressen AS
+//	I102_WT				AT %IX5002.5		:	BOOL;			//AK WT	
+//	I102_AK				AT %IX5002.6		:	BOOL;			//AK Teil
+//	I102_STAU			AT %IX5002.7		:	BOOL;			//
+//	(*
+//	IB5001				AT %IB5001			:	BYTE;			//Input Byte Box 1
+//	I5001_0_			AT %IX5001.0		:	BOOL;			//
+//	I5001_1_			AT %IX5001.1		:	BOOL;			//
+//	I5001_2_			AT %IX5001.2		:	BOOL;			//
+//	I5001_3_			AT %IX5001.3		:	BOOL;			//
+//	I5001_4_			AT %IX5001.4		:	BOOL;			//
+//	I5001_5_			AT %IX5001.5		:	BOOL;			//	
+//	I5001_6_			AT %IX5001.6		:	BOOL;			//
+//	I5001_7_			AT %IX5001.7		:	BOOL;			//
+//	
+//	//-5002
+//	IB5002				AT %IB5002			:	BYTE;			//Input Byte Box 2
+//	I5002_0_			AT %IX5002.0		:	BOOL;			//
+//	I5002_1_			AT %IX5002.1		:	BOOL;			//
+//	I5002_2_			AT %IX5002.2		:	BOOL;			//
+//	I5002_3_			AT %IX5002.3		:	BOOL;			//
+//	I5002_4_			AT %IX5002.4		:	BOOL;			//
+//	I5002_5_			AT %IX5002.5		:	BOOL;			//	
+//	I5002_6_			AT %IX5002.6		:	BOOL;			//
+//	I5002_7_			AT %IX5002.7		:	BOOL;			//
+//	*)
+//	//-5003
+//	IB5003				AT %IB5003			:	BYTE;			//Input Byte Box 3
+//	I5003_0_			AT %IX5003.0		:	BOOL;			//
+//	I5003_1_			AT %IX5003.1		:	BOOL;			//
+//	I5003_2_			AT %IX5003.2		:	BOOL;			//
+//	I5003_3_			AT %IX5003.3		:	BOOL;			//
+//	I5003_4_			AT %IX5003.4		:	BOOL;			//
+//	I5003_5_			AT %IX5003.5		:	BOOL;			//	
+//	I5003_6_			AT %IX5003.6		:	BOOL;			//
+//	I5003_7_			AT %IX5003.7		:	BOOL;			//
+//	
+//	//-5004
+//	IB5004				AT %IB5004			:	BYTE;			//Input Byte Box 4
+//	I5004_0_			AT %IX5004.0		:	BOOL;			//
+//	I5004_1_			AT %IX5004.1		:	BOOL;			//
+//	I5004_2_			AT %IX5004.2		:	BOOL;			//
+//	I5004_3_			AT %IX5004.3		:	BOOL;			//
+//	I5004_4_			AT %IX5004.4		:	BOOL;			//
+//	I5004_5_			AT %IX5004.5		:	BOOL;			//	
+//	I5004_6_			AT %IX5004.6		:	BOOL;			//
+//	I5004_7_			AT %IX5004.7		:	BOOL;			//
+//	
+//	//-5005
+//	IB5005				AT %IB5005			:	BYTE;			//Input Byte Box 5
+//	I5005_0_			AT %IX5005.0		:	BOOL;			//
+//	I5005_1_			AT %IX5005.1		:	BOOL;			//
+//	I5005_2_			AT %IX5005.2		:	BOOL;			//
+//	I5005_3_			AT %IX5005.3		:	BOOL;			//
+//	I5005_4_			AT %IX5005.4		:	BOOL;			//
+//	I5005_5_			AT %IX5005.5		:	BOOL;			//	
+//	I5005_6_			AT %IX5005.6		:	BOOL;			//
+//	I5005_7_			AT %IX5005.7		:	BOOL;			//
+//	
+//	//-5006
+//	IB5006				AT %IB5006			:	BYTE;			//Input Byte Box 6
+//	I5006_0_			AT %IX5006.0		:	BOOL;			//
+//	I5006_1_			AT %IX5006.1		:	BOOL;			//
+//	I5006_2_			AT %IX5006.2		:	BOOL;			//
+//	I5006_3_			AT %IX5006.3		:	BOOL;			//
+//	I5006_4_			AT %IX5006.4		:	BOOL;			//
+//	I5006_5_			AT %IX5006.5		:	BOOL;			//	
+//	I5006_6_			AT %IX5006.6		:	BOOL;			//
+//	I5006_7_			AT %IX5006.7		:	BOOL;			//
+//	
+//	//-5007
+//	IB5007				AT %IB5007			:	BYTE;			//Input Byte Box 7
+//	I5007_0_			AT %IX5007.0		:	BOOL;			//
+//	I5007_1_			AT %IX5007.1		:	BOOL;			//
+//	I5007_2_			AT %IX5007.2		:	BOOL;			//
+//	I5007_3_			AT %IX5007.3		:	BOOL;			//
+//	I5007_4_			AT %IX5007.4		:	BOOL;			//
+//	I5007_5_			AT %IX5007.5		:	BOOL;			//	
+//	I5007_6_			AT %IX5007.6		:	BOOL;			//
+//	I5007_7_			AT %IX5007.7		:	BOOL;			//
+//	
+//	//-5008
+//	IB5008				AT %IB5008			:	BYTE;			//Input Byte Box 8
+//	I5008_0_			AT %IX5008.0		:	BOOL;			//
+//	I5008_1_			AT %IX5008.1		:	BOOL;			//
+//	I5008_2_			AT %IX5008.2		:	BOOL;			//
+//	I5008_3_			AT %IX5008.3		:	BOOL;			//
+//	I5008_4_			AT %IX5008.4		:	BOOL;			//
+//	I5008_5_			AT %IX5008.5		:	BOOL;			//	
+//	I5008_6_			AT %IX5008.6		:	BOOL;			//
+//	I5008_7_			AT %IX5008.7		:	BOOL;			//
+//	
+//	//-5009
+//	IB5009				AT %IB5009			:	BYTE;			//Input Byte Box 9
+//	I5009_0_			AT %IX5009.0		:	BOOL;			//
+//	I5009_1_			AT %IX5009.1		:	BOOL;			//
+//	I5009_2_			AT %IX5009.2		:	BOOL;			//
+//	I5009_3_			AT %IX5009.3		:	BOOL;			//
+//	I5009_4_			AT %IX5009.4		:	BOOL;			//
+//	I5009_5_			AT %IX5009.5		:	BOOL;			//	
+//	I5009_6_			AT %IX5009.6		:	BOOL;			//
+//	I5009_7_			AT %IX5009.7		:	BOOL;			//
+//	
+//	//-5010
+//	IB5010				AT %IB5010			:	BYTE;			//Input Byte Box 10
+//	I5010_0_			AT %IX5010.0		:	BOOL;			//
+//	I5010_1_			AT %IX5010.1		:	BOOL;			//
+//	I5010_2_			AT %IX5010.2		:	BOOL;			//
+//	I5010_3_			AT %IX5010.3		:	BOOL;			//
+//	I5010_4_			AT %IX5010.4		:	BOOL;			//
+//	I5010_5_			AT %IX5010.5		:	BOOL;			//	
+//	I5010_6_			AT %IX5010.6		:	BOOL;			//
+//	I5010_7_			AT %IX5010.7		:	BOOL;			//
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

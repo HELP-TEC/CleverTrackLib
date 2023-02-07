@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="EqualEssentially" Id="{5338f22a-8c3b-4211-8e84-8da67e5bd057}" SpecialFunc="None">
+    <Declaration><![CDATA[(*essentiallyEqual gives whether the difference between a and b is smaller than the acceptable error (epsilon), 
+determined by the smaller of a or b. This means that the values differ less than the acceptable difference in 
+any calculation, so that perhaps they're not actually equal, but they're "essentially equal" (given the epsilon). *)
+FUNCTION EqualEssentially : BOOL
+VAR_INPUT
+    a       : LREAL;
+    b       : LREAL;
+    epsilon : LREAL;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF ABS(a) > ABS(b) THEN
+    EqualEssentially := ABS(a - b) <= (ABS(b) * epsilon);
+ELSE
+    EqualEssentially := ABS(a - b) <= (ABS(a) * epsilon);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="EqualEssentially">
+      <LineId Id="24" Count="4" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

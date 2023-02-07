@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL" Id="{94734850-411d-4576-a0e7-f0a38cdbbc44}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    (*******************************************************************)
+    (* Allgemeine Globale Variablen *)
+    (*******************************************************************)
+    (******* FREIGABEN *********)
+    //ST01
+    xFG_ST01akVZ : BOOL; // Vereinzelung Teil anwesend
+    xFG_ST01akWT : BOOL; // WT anwesend
+    //ST02
+    xFG_ST02akWT : BOOL; // WT anwesend
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

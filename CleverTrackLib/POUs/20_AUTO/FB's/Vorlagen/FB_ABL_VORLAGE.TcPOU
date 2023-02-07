@@ -1,0 +1,471 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_ABL_VORLAGE" Id="{62b1583e-9fd8-484d-bc69-439b751b76ac}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ABL_VORLAGE
+(****************************************************************************************)
+(*	TITEL				Bezeichnung Ablauf	    										*)
+(*	Status				ungetestet                         								*)
+(*  Version:			1.0																*)
+(*	Beschrieb:			Ablaufbeschreibung												*)
+(*																						*)
+(*	Steps:																				*)
+(*		RESET:=0		Reset der Station												*)
+(* 		INIT:=100		Initialisieren													*)
+(*		... 			...																*)
+(*		READY:=999		Initialisiert, Bereit für Start									*)
+(*		START:=1000		Start Zyklisch 													*)
+(*		... 			...																*)
+(*		DONE:=8000		Letzer Schritt													*)
+(*		ERROR:=9000		ALARM/Fehler													*)
+(* 	09.09.2019/Dj																		*)
+(***********************************Revisionen*******************************************)
+(*	dd.mm.yyyy   KZ    x.y			Beschrieb											*)
+(****************************************************************************************)
+
+VAR_INPUT
+	xIN_Reset		:	BOOL;		// Schrittkette zurücksetzen 
+	xIN_Init		:	BOOL;		// Initialisieren
+	xIN_Quit		:	BOOL;		// Fehler quittieren 
+	xIN_Start		:	BOOL;		// Startbefehl
+	xIN_Sperre		:	BOOL;		// FB Sperren 
+	xIN_NextStep 	:	BOOL;		// Nächsten Schritt ausführen 
+	xIN_AlarmAktiv	: 	BOOL;		// Anlage hat Alarm
+	xIN_DryCycle	: 	BOOL;		// Fahren ohne Teile
+	xIN_RestartCYCL	:	BOOL;		// Zyklus erneut starten im STEP, END, LEERFAHREN
+	enIN_State		:	enState;	// Status Anlage
+	tIN_Timeout		:	TIME;		// Timout
+	
+	pxFG_Freigabe	: 	POINTER TO BOOL;	//Freigabe von Station
+END_VAR
+VAR_OUTPUT
+	(* standart Ausgänge *)
+	xOUT_ErrFlag	:	BOOL;					// Error Flag 
+	xOUT_Busy		:	BOOL;					// Baustein befindet sich im Ablauf 
+	xOUT_Done		:	BOOL;					// Baustein hat den Ablauf beendet 		
+	xOUT_Timeout	:	BOOL;					// Timeout FB 
+	xOUT_InitDone	:	BOOL;					// initialisierung fertig
+	xOUT_Wait		:	BOOL;					// Wartet auf Bedingung
+	iOUT_Step		:	INT;					// Aktueller Schritt 
+	bOUT_Error		:	BYTE;					// Fehlernummer
+END_VAR
+VAR
+	(* Standard *)
+	(* Schritt *)
+	iLastStep			:	INT;			// Merker letzter Schritt 
+	iPreStep			:	INT;			// Schritt zurück nach Alarm 
+	iAktStep			:	INT;			// aktueller Schritt
+	
+	// Trigger Starten 
+	rtSTART: R_TRIG;
+	// Timer TimeOut 
+	TON_Timeout: TON;
+	
+	(* Bausteine *)
+	
+	(* Spezial *)
+	
+END_VAR
+VAR CONSTANT
+	RESET		:	INT:=0;			// Reset
+	INIT		:	INT:=100;		// Initialisieren 
+	READY		:	INT:=999;		// READY to Start, Init Done 
+	START		:	INT:=1000;		// Start Zyklisch
+	DONE		:	INT:=8000;		// Ablauf beendet 
+	ERROR		:	INT:=9000;		// Fehler 
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*******************************************************************)
+(* Trigger  *)
+(*******************************************************************)
+	(* Zurücksetzen *)
+	IF xIN_RESET THEN
+		iPreStep := RESET;
+		iOUT_Step := RESET;
+	END_IF;
+
+	(* Error Quittieren *)
+	IF (bOUT_Error<>0) AND xIN_Quit THEN
+		xOUT_ErrFlag := FALSE;
+		bOUT_Error := 0;
+		iOUT_Step := iPreStep;
+	END_IF;
+
+(*******************************************************************)
+(* Timer *)
+(*******************************************************************)
+TON_Timeout(IN:=xIN_NextStep AND  (iLastStep = iOUT_Step) (*todo FG *), 
+				PT:=tIN_Timeout);
+				
+(*******************************************************************)
+(* Bausteine *)
+(*******************************************************************)
+
+
+
+(*******************************************************************)
+(* OUTPUTS *)
+(*******************************************************************)
+	// Error Flag 
+	xOUT_ErrFlag	:= (bOUT_Error<>0);		 
+	// Baustein befindet sich im Ablauf 
+	xOUT_Busy		:= (iOUT_Step>READY) AND (iOUT_Step<DONE);
+	// Baustein hat den Ablauf beendet
+	xOUT_Done		:= (iOUT_Step=DONE);	
+	// Timeout FB 				 		
+	xOUT_Timeout	:= TON_Timeout.Q;		
+	// Itialisierung fertig			
+	xOUT_InitDone	:= (iOUT_Step=READY);		
+	// Aktueller Schritt			
+	iOUT_Step		:= iOUT_Step;	//Im Ablauf gesetzt		
+	//Fehlernummer	 
+	bOUT_Error		:= bOUT_Error;	//Im Ablauf/FB gesetzt	
+	(* Warte (alle Schritte wo auf FG oder Teile gewartet wird) *)
+	xOUT_Wait := (iOUT_Step = DONE);
+	
+(*******************************************************************)
+(* Ablauf *)
+(*******************************************************************)
+	
+	(* Sperren *)
+	IF xIN_Sperre THEN
+		iPreStep := RESET;
+		iOUT_Step := RESET;
+		RETURN;
+	END_IF;
+	
+	(* Schritt Merker *)
+	IF iAktStep <> iOUT_Step THEN 
+		iLastStep := iAktStep;
+		iAktStep := iOUT_Step;
+	END_IF
+	
+	(* START *)
+	rtSTART(CLK:= (iOUT_Step=READY) AND  xIN_Start);
+
+(*******************************************************************)
+(* Schrittkette  *)
+(*******************************************************************)
+CASE iOUT_Step OF
+
+	(***** RESET *****)
+	RESET:	(* Schritt 0-99 *)
+		//Initialisierungen
+		//Start Init Ablauf
+		IF xIN_Init THEN
+			iOUT_Step := INIT;
+		//Start Manu Ablauf
+		ELSIF enIN_State=StateMANU AND xIN_NextStep THEN
+			iOUT_Step := INIT;
+		END_IF;
+		;
+	(***** INIT *****)
+	INIT:	(* Grundstellung ? *)
+		IF TRUE THEN
+			iOUT_Step := READY;
+		ELSE
+			iOUT_Step := 110;
+		END_IF;
+
+	110:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 120;
+		END_IF;
+
+	120:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := READY;
+		END_IF;
+
+	(***** READY / INIT DONE *****)		
+	READY:	(* Start AUTO,END,LEER,STEP *)
+		IF rtSTART.Q OR (enIN_State=StateMANU) THEN
+			iOUT_Step := START;
+		END_IF
+		
+	(***** START  ZYKLISCH *****)
+	START:	(*  *)
+		IF xIN_NextStep AND pxFG_Freigabe^ THEN
+			iOUT_Step := 1010;	
+		END_IF;
+
+	1010:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1020;
+		END_IF;
+
+	1020:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1030;
+		END_IF;
+
+	1030:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1040;
+		END_IF;
+
+	1040:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1050;
+		END_IF;
+
+	1050:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1060;
+		END_IF;
+
+	1060:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1070;
+		END_IF;
+
+	1070:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1080;
+		END_IF;
+
+	1080:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1090;
+		END_IF;
+
+	1090:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 1100;
+		END_IF;
+
+		
+	(***** SEQUENZ *****)
+	2000:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2010;
+		END_IF;
+
+	2010:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2020;
+		END_IF;
+
+	2020:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2030;
+		END_IF;
+
+	2030:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2040;
+		END_IF;
+
+	2040:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2050;
+		END_IF;
+
+	2050:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2060;
+		END_IF;
+
+	2060:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2070;
+		END_IF;
+
+	2070:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2080;
+		END_IF;
+
+	2080:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2090;
+		END_IF;
+
+	2090:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 2100;
+		END_IF;
+
+	(***** SEQUENZ *****)
+	3000:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3010;
+		END_IF;
+
+	3010:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3020;
+		END_IF;
+
+	3020:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step	:= 3030;
+		END_IF;
+
+	3030:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step	:= 3040;
+		END_IF;
+
+	3040:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3050;
+		END_IF;
+
+	3050:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3060;
+		END_IF;
+
+	3060:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3070;
+		END_IF;
+
+	3070:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3080;
+		END_IF;
+
+	3080:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := 3090;
+		END_IF;
+
+	3090:	(*  *)
+		IF xIN_NextStep THEN
+			iOUT_Step := DONE;	
+		END_IF;
+
+	(***** DONE *****)
+	DONE:	(* Letzter Schritt  *)
+		IF NOT xIN_AlarmAktiv THEN
+			//AUTO
+			IF xIN_NextStep AND (enIN_State = StateAUTO) THEN
+				iOUT_Step := START;
+			//STEP / END / LEERFAHREN restart
+			ELSIF (enIN_State < StateAUTO) AND (enIN_State >= StateSTEP) AND xIN_RestartCYCL THEN
+				iOUT_Step := START;
+			//STEP / END / LEERFAHREN fertig
+			ELSIF (enIN_State = StateREADY)  THEN
+				iOUT_Step := READY;
+			END_IF;
+		END_IF;	
+
+
+	(************ ERROR *************)
+	ERROR:	(* ERROR *);
+
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ABL_VORLAGE">
+      <LineId Id="3" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="1113" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="1115" Count="0" />
+      <LineId Id="18" Count="2" />
+      <LineId Id="1102" Count="4" />
+      <LineId Id="1110" Count="0" />
+      <LineId Id="1127" Count="0" />
+      <LineId Id="1111" Count="1" />
+      <LineId Id="1098" Count="0" />
+      <LineId Id="1171" Count="1" />
+      <LineId Id="1175" Count="2" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="1187" Count="0" />
+      <LineId Id="1179" Count="0" />
+      <LineId Id="1186" Count="0" />
+      <LineId Id="1180" Count="0" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="1181" Count="0" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1182" Count="0" />
+      <LineId Id="1190" Count="0" />
+      <LineId Id="1184" Count="0" />
+      <LineId Id="1192" Count="0" />
+      <LineId Id="1185" Count="0" />
+      <LineId Id="1193" Count="0" />
+      <LineId Id="1178" Count="0" />
+      <LineId Id="1174" Count="0" />
+      <LineId Id="1170" Count="0" />
+      <LineId Id="1099" Count="2" />
+      <LineId Id="1097" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="1128" Count="1" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="1089" Count="0" />
+      <LineId Id="1092" Count="2" />
+      <LineId Id="1096" Count="0" />
+      <LineId Id="1090" Count="0" />
+      <LineId Id="1138" Count="1" />
+      <LineId Id="1137" Count="0" />
+      <LineId Id="37" Count="4" />
+      <LineId Id="1131" Count="0" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="1130" Count="0" />
+      <LineId Id="1166" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="1167" Count="0" />
+      <LineId Id="1164" Count="0" />
+      <LineId Id="1168" Count="0" />
+      <LineId Id="46" Count="12" />
+      <LineId Id="60" Count="4" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="102" Count="1" />
+      <LineId Id="1132" Count="0" />
+      <LineId Id="1141" Count="3" />
+      <LineId Id="104" Count="3" />
+      <LineId Id="109" Count="4" />
+      <LineId Id="115" Count="4" />
+      <LineId Id="121" Count="4" />
+      <LineId Id="127" Count="4" />
+      <LineId Id="133" Count="4" />
+      <LineId Id="139" Count="4" />
+      <LineId Id="145" Count="4" />
+      <LineId Id="151" Count="4" />
+      <LineId Id="157" Count="4" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="1145" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="1146" Count="0" />
+      <LineId Id="165" Count="2" />
+      <LineId Id="169" Count="4" />
+      <LineId Id="175" Count="4" />
+      <LineId Id="181" Count="4" />
+      <LineId Id="187" Count="4" />
+      <LineId Id="193" Count="4" />
+      <LineId Id="199" Count="4" />
+      <LineId Id="205" Count="4" />
+      <LineId Id="211" Count="4" />
+      <LineId Id="217" Count="4" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="1148" Count="0" />
+      <LineId Id="224" Count="3" />
+      <LineId Id="229" Count="4" />
+      <LineId Id="235" Count="4" />
+      <LineId Id="241" Count="4" />
+      <LineId Id="247" Count="4" />
+      <LineId Id="253" Count="4" />
+      <LineId Id="259" Count="4" />
+      <LineId Id="265" Count="4" />
+      <LineId Id="271" Count="4" />
+      <LineId Id="277" Count="4" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="1169" Count="0" />
+      <LineId Id="942" Count="1" />
+      <LineId Id="1194" Count="0" />
+      <LineId Id="1149" Count="0" />
+      <LineId Id="945" Count="1" />
+      <LineId Id="1160" Count="0" />
+      <LineId Id="1153" Count="0" />
+      <LineId Id="1163" Count="0" />
+      <LineId Id="1150" Count="0" />
+      <LineId Id="947" Count="0" />
+      <LineId Id="949" Count="2" />
+      <LineId Id="968" Count="4" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

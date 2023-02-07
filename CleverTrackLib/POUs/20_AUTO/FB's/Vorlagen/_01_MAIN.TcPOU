@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="_01_MAIN" Id="{f3967eba-7efc-4619-8471-a18348d0943c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM _01_MAIN
+(****************************************************************************)
+//GENERAL PROGRAMM
+//	- Call Sub-Programs
+//
+//	04.09.2019/Dj
+//
+//	Version:
+(****************************************************************************)
+VAR
+END_VAR
+
+
+    ]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//--------------------------------------------------------------------------
+// PROGRAM CALLS
+//--------------------------------------------------------------------------
+//Allgemein
+//_02_SAFETY();
+//_05_FLAGS( xIN_AIR:=FALSE, xIN_btRES_TEMP:=HMI.btArMain[8]);
+
+//HMI
+//_10_HMI();
+
+//AUTO
+//_20_AUTO(xIN_Quit:= _14_STATE._FB_btQUIT.pbtIN^.rtrig , enIN_State:= );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="_01_MAIN">
+      <LineId Id="558" Count="3" />
+      <LineId Id="579" Count="0" />
+      <LineId Id="581" Count="4" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="656" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

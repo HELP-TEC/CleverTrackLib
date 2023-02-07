@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="PiecePos_e" Id="{3f12e6d1-3bd9-4d20-a9a7-7533355a5fd6}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE PiecePos_e :
+(
+    Assembly_left  := 0,
+    Assembly_right := 1,
+    Test_left      := 2,
+    Test_right     := 3,
+    _max           := 4
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="PERS" Id="{fbf39650-67ca-4454-aedb-fafdd3046409}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL RETAIN
+    (***********************************************************************************************)
+    (* COUNTER *)
+    (***********************************************************************************************)
+    //COUNTER 
+    udiTotalOK  : UDINT; // Total Counter  OK 
+    udiTotalNOK : UDINT; // Total Counter  NOK 
+
+    udiTempOK  : UDINT; // Temporary Counter  OK 
+    udiTempNOK : UDINT; // Temporary Counter  NOK 
+
+    //OPERATING HOURS
+    udiCountHon    : UDINT; // Operating hours SYSTEM POWER ON [h] 
+    udiCount6Mon   : UDINT; // Operating hours SYSTEM POWER ON [6min (0.1h)] 
+    udiCountHauto  : UDINT; // Operating hours SYSTEM IN AUTOMATIC MODE [h] 
+    udiCount6Mauto : UDINT; // Operating hours SYSTEM IN AUTOMATIC MODE [6min (0.1h)] 
+
+    (***********************************************************************************************)
+    (* Application *)
+    (***********************************************************************************************)
+    iStationTimeDef1 : ARRAY[1..CONST.STATION_NUMBER] OF DINT;
+    iStationTimeDef2 : ARRAY[1..CONST.STATION_NUMBER] OF DINT;
+
+    iRecipeCurrent : INT;
+    arrStationOffsetsList : ARRAY[0..CONST.MAX_TRACK_OFFSET_LIST - 1] OF ARRAY[1..CONST.STATION_NUMBER] OF REAL;
+    arrStationUsedList : ARRAY[0..CONST.MAX_RECIPE_PER_STATION - 1] OF ARRAY[1..CONST.STATION_NUMBER] OF INT;
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

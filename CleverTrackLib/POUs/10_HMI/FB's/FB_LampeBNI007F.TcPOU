@@ -1,0 +1,370 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_LampeBNI007F" Id="{7896cd10-b0a5-4778-a874-3a1ba72825a8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LampeBNI007F
+(****************************************************************************************)
+(*	TITEL			    Lampenbaustein                 									*)
+(*	Status				ungetestet                                       				*)
+(*  Version:			1.0																*)
+(*	Beschrieb:			Der Lampenbasutein gilt für die Segmenzanzeige BN007F    		*)
+(*                      Mit den Farben werden der Status, sowie Meldungen angezeigt     *)
+(*                                                                                      *)
+(*																						*)
+(*	State:																				*)
+(*		INIT:=0			Initialisieren													*)
+(*																						*)
+(*																						*)
+(*		ERROR:=99		ALARM/Fehler													*)
+(*																						*)
+(* 	28.03.2018 / MK																		*)
+(************************************Revisionen******************************************)
+(*	25.09.2019 / DJ		1.0		strIN_Info, iIN_Modus, strOUT_Alarm entfernt			*)
+(****************************************************************************************)
+VAR_INPUT
+	(* standart Eingänge *)					 
+	xIN_Init			:	BOOL;		// Initialisieren
+	xIN_Quit			:	BOOL;		// Error Quittieren
+    xIN_Disable         :   BOOL;       // Sperre des Bausteins
+	enIN_State			:	enState;	// Status der Anlage
+
+
+	(* spezifische Eingänge *)
+    xIN_SafetyError     :   BOOL;       // Safety hat einen Error  
+	xIN_NotAus			:	BOOL;		// Emergency Stop   
+	tIN_Impuls			:	TIME;		//Impulsdauer
+	xIN_AlarmAktiv		:	BOOL;		// Alarm steht an
+
+    xIN_Mel1            :   BOOL;       // Meldung 1 on  
+    xIN_Mel2            :   BOOL;       // Meldung 2 on  
+    xIN_Mel3            :   BOOL;       // Meldung 3 on  
+	xIN_Mel4            :   BOOL;	    // Meldung 4 on
+    xIN_Mel5            :   BOOL;       // Meldung 5 on
+    xIN_Mel6            :   BOOL;       // Meldung 6 on    
+    xIN_Mel7            :   BOOL;       // Meldung 7 on  
+	
+
+    tIN_Meldungen       :   TIME;        // Meldungsswitsch Zeit
+END_VAR
+	
+VAR_OUTPUT
+	(* standart Ausgänge *)
+	xOUT_ErrFlag		:	BOOL; 		// Fehler detektiert
+	
+	(* spezifische Ausgänge *)
+    wOUT_Lampe          :   WORD;       // Lampe
+	xOUT_SyncStart		:	BOOL;		// Synchronisieren Start
+	xOUT_SyncImp		:	BOOL;		// Synchronisieren Impuls
+    
+
+END_VAR
+VAR 
+	(* State *)
+	i_State				:	INT;		// State
+	i_PreState			:	INT;		// Merker letzter State
+	i_AktState			:	INT;		// aktueller State
+	i_LastState			:	INT;		// State zurück nach Alarm
+	
+	(* Boolean *)
+
+	
+	(* Flanken *)
+	RT_Quit				:	R_TRIG;		// aufsteigende Flanke Quit
+	RT_Init				:	R_TRIG;		// aufsteigende Flanke Init
+
+	
+    (* Zähler *)
+
+	(* Timer *)
+    
+    TON_Mel             :   TON;        // Timer Meldung
+	BLINK				:	TP;			// Blinker
+	BLINK_				:	TP;			// Blinker
+	
+    (* Diverses *)
+    en_Seg3             :   enLamp;     // 3. Segment der Lampe (oben)
+    en_Seg2             :   enLamp;     // 2. Segment der Lampe (mitte)
+    en_Seg1             :   enLamp;     // 1. Segment der Lampe (unten)
+    
+    x_Meldung           :   BOOL;       // Meldungen werden abgearbeitet
+	x_first				:	BOOL:=FALSE;	// aufstarten
+    
+    b_Meldungen         :   BYTE;       // Meldungen werden gespeichert
+            
+	w_Lampe             :   WORD;       // Lampe
+	
+END_VAR
+VAR CONSTANT
+
+	ERROR				: 	INT := 99;	// Error
+    READY               :   INT := 10;  // Baustein ist bereit
+	INIT				: 	INT := 0;	// Initialisiert
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(************************************Button OUT****************************************)
+
+
+(***********************************Allgemein******************************************)
+
+// Zurücksetzen
+IF rt_init.Q  THEN 
+	i_PreState := INIT;
+	i_State := INIT;
+END_IF
+//Schritt Merker
+IF i_AktState <> i_State THEN 
+	i_LastState := i_AktState;
+	i_PreState := i_AktState;
+	i_AktState := i_State;
+END_IF
+
+//Quittieren
+IF RT_Quit.Q AND (i_State=ERROR) THEN
+	i_State:=i_PreState ;
+END_IF
+
+(************************************Error*********************************************)
+
+
+
+
+(************************************Timer*********************************************)
+TON_Mel(IN:=enIN_State=enState.StateAUTO AND NOT Ton_Mel.Q , PT:=tIN_Meldungen);
+
+BLINK(IN:=NOT BLINK_.Q , PT:=tIN_Impuls );
+BLINK_(IN:=NOT BLINK.Q,PT:=tIN_Impuls);
+
+
+(************************************Flanken*******************************************)
+
+rt_Quit(CLK := xIN_Quit);
+rt_Init(CLK := xIN_INIT);
+
+(************************************Zähler********************************************)
+
+(************************************Funktionsaufruf***********************************)
+
+
+(************************************Bausteinaufruf************************************)
+
+(************************************Logik*********************************************)
+x_Meldung:=b_Meldungen>0;
+
+IF NOT x_Meldung THEN
+    b_Meldungen.1:=xIN_Mel1;
+    b_Meldungen.2:=xIN_Mel2;
+    b_Meldungen.3:=xIN_Mel3;
+    b_Meldungen.4:=xIN_Mel4;
+    b_Meldungen.5:=xIN_Mel5;
+    b_Meldungen.6:=xIN_Mel6;
+    b_Meldungen.7:=xIN_Mel7;    
+END_IF
+
+
+(************************************State*********************************************)
+CASE i_State OF 
+
+	INIT:
+		(* Initialisiert *)
+		w_Lampe:=0;
+        i_State:=READY;
+        
+
+    READY:
+        (* Baustein ist bereit *)
+         CASE enIN_State OF
+             enSTATE.StateOFF:
+			 	(* Not-Aus nicht quittiert *)
+				IF NOT xIN_NotAus THEN
+					en_Seg3:=enLamp.Aus;
+					en_Seg2:=enLamp.Aus;
+					en_Seg1:=enLamp.Aus;
+				
+                (* blau blinkend *)
+                ELSIF xIN_SafetyError THEN
+                    en_Seg3:=enLamp.Blau;
+                    en_Seg2:=enLamp.Rot;
+                    en_Seg1:=enLamp.Blau;
+				ELSE
+                    en_Seg3:=enLamp.BlauB;
+                    en_Seg2:=enLamp.BlauB;
+                    en_Seg1:=enLamp.BlauB;
+                END_IF             
+
+             enState.StateAIRon:
+                (* blau *)
+                IF xIN_SafetyError THEN
+                    en_Seg3:=enLamp.Blau;
+                    en_Seg2:=enLamp.Rot;
+                    en_Seg1:=enLamp.Blau;
+				ELSE
+                    en_Seg3:=enLamp.Blau;
+                    en_Seg2:=enLamp.Blau;
+                    en_Seg1:=enLamp.Blau;
+                END_IF    
+                
+             enState.StateENGIZED:
+                (* Orange *)
+                en_Seg3:=enLamp.Orange;
+                en_Seg2:=enLamp.Orange;
+                en_Seg1:=enLamp.Orange;
+
+             enState.StateMANU:
+                (* Benutzerdefiniert (Violet) *)
+                en_Seg3:=enLamp.Benutzer;
+                en_Seg2:=enLamp.Benutzer;
+                en_Seg1:=enLamp.Benutzer;
+             
+            enState.StateINIT,enState.StateREF:
+            
+                (* Weiss blinkend *)
+                en_Seg3:=enLamp.WeissB;
+                en_Seg2:=enLamp.WeissB;
+                en_Seg1:=enLamp.WeissB;
+                
+            enState.StateREADY:
+                (* Weiss *)
+                en_Seg3:=enLamp.Weiss;
+                en_Seg2:=enLamp.Weiss;
+                en_Seg1:=enLamp.Weiss;
+                
+            enState.StateSTOP:
+                (* grün /weiss /grün *)
+                en_Seg3:=enLamp.Gruen;
+                en_Seg2:=enLamp.Weiss;
+                en_Seg1:=enLamp.Gruen;
+
+            enState.StateALARM:
+                (* Rot *)
+                en_Seg3:=enLamp.Rot;
+                en_Seg2:=enLamp.Rot;
+                en_Seg1:=enLamp.Rot;
+
+            enState.StateSTEP,enState.StateEND,enState.StateLEER:
+            
+            
+                (* Grün blinkend *)                
+                en_Seg3:=enLamp.GruenB;
+                en_Seg2:=enLamp.GruenB;
+                en_Seg1:=enLamp.GruenB;
+            
+            enState.StateAUTO:
+				IF	xIN_AlarmAktiv THEN		
+					en_Seg3:=enLamp.Gruen;
+                    en_Seg2:=enLamp.Rot;
+                    en_Seg1:=enLamp.Gruen;	
+
+                ELSIF TON_Mel.Q THEN
+                    (* Grün *)
+                    en_Seg3:=enLamp.Gruen;
+                    en_Seg2:=enLamp.Gruen;
+                    en_Seg1:=enLamp.Gruen;
+                    
+                //Meldungen
+                    IF b_Meldungen.1 THEN    
+                        (* grün/grün/gelb *)
+                        en_Seg1:=enLamp.Gruen;
+                        en_Seg2:=enLamp.Gruen;
+                        en_Seg3:=enLamp.Orange;
+                        b_Meldungen.1:=FALSE;
+                        
+                    ELSIF b_Meldungen.2 THEN
+                        (* grün/gelb/grün *)
+                        en_Seg1:=enLamp.Gruen;
+                        en_Seg2:=enLamp.Orange;
+                        en_Seg3:=enLamp.Gruen;
+                        b_Meldungen.2:=FALSE;
+                        
+                    ELSIF b_Meldungen.3 THEN
+                        (* grün/gelb/gelb *)
+                        en_Seg1:=enLamp.Gruen;
+                        en_Seg2:=enLamp.Orange;
+                        en_Seg3:=enLamp.Orange;
+                        b_Meldungen.3:=FALSE;    
+
+                    ELSIF b_Meldungen.4 THEN
+                        (* gelb/grün/grün *)
+                        en_Seg1:=enLamp.Orange;
+                        en_Seg2:=enLamp.Gruen;
+                        en_Seg3:=enLamp.Gruen;
+                        b_Meldungen.4:=FALSE;
+                        
+                    ELSIF b_Meldungen.5 THEN
+                        (* gelb/grün/gelb *)
+                        en_Seg1:=enLamp.Orange;
+                        en_Seg2:=enLamp.Gruen;
+                        en_Seg3:=enLamp.Orange;
+                        b_Meldungen.5:=FALSE;
+                        
+                    ELSIF b_Meldungen.6 THEN
+                        (* gelb/gelb/grün *)
+                        en_Seg1:=enLamp.Orange;
+                        en_Seg2:=enLamp.Orange;
+                        en_Seg3:=enLamp.Gruen;
+                        b_Meldungen.6:=FALSE;
+                    ELSIF b_Meldungen.7 THEN
+                        (* gelb/gelb/gelb *)
+                        en_Seg1:=enLamp.Gelb;
+                        en_Seg2:=enLamp.Gelb;
+                        en_Seg3:=enLamp.Gelb;
+                        b_Meldungen.7:=FALSE;
+                    END_IF
+                END_IF    
+         END_CASE  
+  
+    w_Lampe:=INT_TO_WORD(en_Seg3);
+    w_Lampe:=SHL(w_Lampe,4);
+    w_Lampe:=w_Lampe OR INT_TO_WORD(en_Seg2);
+    w_Lampe:=SHL(w_Lampe,4);
+    w_Lampe:=w_Lampe OR INT_TO_WORD(en_Seg1);
+	
+    
+	ERROR:
+		(*Es ist ein Fehler eingetroffen *)
+	
+ELSE
+	(* Case befindet sich in einem undefiniertem Zustand! *)
+	i_State:=ERROR;
+END_CASE
+
+
+
+(***********************************Output*******************************************)
+ xOUT_ErrFlag := (i_State = ERROR);
+ wOUT_Lampe:=w_Lampe;
+ xOUT_SyncStart:=x_first;
+ xOUT_SyncImp:=BLINK_.Q;
+x_first:=TRUE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LampeBNI007F">
+      <LineId Id="1614" Count="2" />
+      <LineId Id="1618" Count="15" />
+      <LineId Id="1636" Count="0" />
+      <LineId Id="1638" Count="8" />
+      <LineId Id="1860" Count="1" />
+      <LineId Id="1859" Count="0" />
+      <LineId Id="1647" Count="26" />
+      <LineId Id="1686" Count="5" />
+      <LineId Id="1980" Count="0" />
+      <LineId Id="1694" Count="73" />
+      <LineId Id="1866" Count="0" />
+      <LineId Id="1768" Count="0" />
+      <LineId Id="1770" Count="5" />
+      <LineId Id="2096" Count="0" />
+      <LineId Id="2100" Count="1" />
+      <LineId Id="2098" Count="0" />
+      <LineId Id="2097" Count="0" />
+      <LineId Id="1776" Count="68" />
+      <LineId Id="1848" Count="0" />
+      <LineId Id="1984" Count="0" />
+      <LineId Id="1849" Count="0" />
+      <LineId Id="1851" Count="5" />
+      <LineId Id="1863" Count="0" />
+      <LineId Id="1865" Count="0" />
+      <LineId Id="1864" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

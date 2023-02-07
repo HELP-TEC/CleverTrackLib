@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="GetTick" Id="{29921add-6e89-4945-967a-5cd442b28ed3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION GetTick : UDINT
+VAR_INPUT
+END_VAR
+VAR
+	getTaskTime : GETTASKTIME;		// allow to get time based value, 
+	//w1 : WORD;
+	//w2 : WORD; 
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[getTaskTime();
+//w1 := UDINT_TO_WORD(SHR(getTaskTime.timeLoDW, 16));
+//w2 := UDINT_TO_WORD(getTaskTime.timeLoDW AND 16#FFFF);
+//GetTick := SHL(WORD_TO_UDINT(w2), 16) OR w1;
+GetTick := getTaskTime.timeLoDW/10000;
+]]></ST>
+    </Implementation>
+    <LineIds Name="GetTick">
+      <LineId Id="8" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

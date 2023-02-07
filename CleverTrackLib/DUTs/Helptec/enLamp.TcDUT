@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.16">
+  <DUT Name="enLamp" Id="{9e0dd4e7-97f3-42a3-909b-682332233622}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE enLamp :
+(
+	Aus         := 2#0000,  //Aus
+    Gruen       := 2#0001,  //Grün
+    GruenB      := 2#1001,  //Grün blinkt
+    Rot         := 2#0010,  //Rot
+    RotB        := 2#1010,  //Rot blinkt
+    Gelb        := 2#0011,  //Gelb
+    GelbB       := 2#1011,  //Gelb blinkt
+    Blau        := 2#0100,  //Blau 
+    BlauB       := 2#1100,  //Blau blinkt
+    Orange      := 2#0101,  //Orange
+    OrangeB     := 2#1101,  //Orange blinkt
+    Benutzer    := 2#0110,  //Benutzerdefiniert (Violet)
+    BenutzerB   := 2#1110,  //Benutzerdefiniert blinkt (Violet)
+    Weiss       := 2#0111,  //Weiss
+    WeissB      := 2#1111   //Weiss blinkt
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

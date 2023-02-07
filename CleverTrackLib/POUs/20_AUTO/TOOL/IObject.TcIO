@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <Itf Name="IObject" Id="{e16bb87f-6d2f-46c7-873f-5e9dcf2691ce}">
+    <Declaration><![CDATA[// Basic object interface that provide core function for each FB
+INTERFACE IObject
+]]></Declaration>
+    <Method Name="Equals" Id="{f099fff4-86e1-41b7-96f8-a685e42b7b5f}">
+      <Declaration><![CDATA[METHOD Equals : BOOL
+VAR_INPUT
+	object : ANY;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="ToString" Id="{16e291d8-af2e-47c5-b6b6-e173c2b72948}">
+      <Declaration><![CDATA[METHOD ToString : STRING
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

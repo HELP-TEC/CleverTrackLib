@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="POU_AUT_VORLAGE" Id="{c900c5a0-ba51-4eac-9987-9bdf4283405f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM POU_AUT_VORLAGE
+(****************************************************************************)
+(*	POU_AUT_zxx			Bausteinaufrufe Station	zxx							*)
+(*	Status				ungetestet											*)
+(*  Version:			1.0													*)
+(*	Beschrieb:																*)
+(*																			*)
+(*	Abläufe:			FB_ABLzxxA		Hauptablauf							*)
+(*																			*)
+(*																			*)
+(* 	25.09.2019/Dj															*)
+(****************************************************************************)
+(*	dd.mm.yyyy   KZ    x.y			Beschrieb								*)
+(****************************************************************************)
+VAR_INPUT
+	(* standart Eingänge *)
+	xIN_Init		: 	BOOL;		// Initialisieren	
+	xIN_Quit		:	BOOL;		// Fehler quittieren 
+	xIN_Start		:	BOOL;		// Schrittkette Starten
+	xIN_Step		:	BOOL;		// Schrittkette Starten/Nachster Schritt
+	xIN_ManuCycle	:	BOOL;		// Zylus Manuell Starten
+	xIN_AlarmAktiv	:	BOOL;		// Alarm aktiv 
+	xIN_DryCycle 	:	BOOL;		// Fahren ohne Teile 
+	enIN_State		:	enState;	// Status Anlage/Zelle 
+	tIN_Timeout		:	TIME;		// Timout 
+	xIN_On			:	BOOL;		// Station eingeschaltet 
+	
+	(* spezifische Eingänge *)
+
+END_VAR
+VAR_OUTPUT
+	(* standart Ausgänge *)
+    xOUT_InitDone   :   BOOL;       // fertig initialisiert
+	xOUT_Done		:	BOOL;		// alle Abläufe fertig
+	xOUT_Ready      :   BOOL;       // Station ist bereit (wartet auf Start)
+    xOUT_ErrFlag    :   BOOL;       // Error Flag   
+	xOUT_Wait		:	BOOL;		// alle Abläufe warten
+	xOUT_AlarmST	: 	BOOL;		// Station hat Alarm
+	
+	(* spezifische Ausgänge *)
+	
+END_VAR
+VAR
+	(* Bausteine *)
+	_FB_ABL_xxxA	:	FB_ABL_VORLAGE;
+	
+	(* Flags *)			
+	xReset 			: 	BOOL;		// Schrittketten zurücksetzen
+	xManuCycle		: 	BOOL;		// Manueller Zylus aktiv	
+	xNextStep		:	BOOL;		// Nächster Schritt erlaubt	
+	
+	xDummy			:  	BOOL;		// Platzhalter							
+END_VAR 
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*******************************************************************)
+(* Timer *)
+(*******************************************************************)
+
+(*******************************************************************)
+(* Flanken / Merker *)
+(*******************************************************************)
+//MANU CYCLE
+	IF (enIN_State=StateMANU) AND xIN_ManuCycle THEN 
+		xManuCycle := TRUE;
+	END_IF;
+	IF (enIN_State<>StateMANU) OR xOUT_Done THEN
+		xManuCycle := FALSE;
+	END_IF
+//NEXT STEP
+	xNextStep := 	(enIN_State>StateSTEP) OR
+					(	(enIN_State=StateSTEP) AND xIN_Step ) OR
+					(	(enIN_State=StateMANU) AND xManuCycle );
+//RESET
+	xReset := 	(	(enIN_State<StateREADY) AND (enIN_State<>StateINIT) ) OR
+				(	(enIN_State=StateMANU) AND NOT xManuCycle );
+				
+(*******************************************************************)
+(* Bausteinaufrufe Abläufe *)
+(*******************************************************************)
+_FB_ABL_xxxA(
+	xIN_Reset:= xReset,
+	xIN_Init:= xIN_Init, 
+	xIN_Quit:= xIN_Quit, 
+	xIN_Start:= xIN_Start, 
+	xIN_Sperre:= NOT xIN_On, 
+	xIN_NextStep:= xNextStep, 
+	xIN_AlarmAktiv:= xIN_AlarmAktiv, 
+	xIN_DryCycle:= xIN_DryCycle, 
+	xIN_RestartCYCL:= , 
+	enIN_State:= enIN_State, 
+	tIN_Timeout:= tIN_Timeout,
+	pxFG_Freigabe:= ADR(xDummy), 
+	xOUT_ErrFlag=> , 
+	xOUT_Busy=> , 
+	xOUT_Done=> , 
+	xOUT_Timeout=> , 
+	xOUT_InitDone=> , 
+	xOUT_Wait=> , 
+	iOUT_Step=> , 
+	bOUT_Error=> );
+	
+(*******************************************************************)
+(* Bausteinaufruf Error Station *)
+(*******************************************************************)	
+POU_ERR_VORLAGE(xIN_QUIT:=xIN_Quit , pstrArIN_ALARM:=ADR(HMI.strArALARM[1]));
+
+(*******************************************************************)
+(* OUTPUT *)
+(*******************************************************************)
+	xOUT_InitDone	:= 	_FB_ABL_xxxA.xOUT_InitDone;      
+    xOUT_Ready		:=	xOUT_InitDone;
+	xOUT_Done		:= 	_FB_ABL_xxxA.xOUT_Done;
+    xOUT_ErrFlag    :=  _FB_ABL_xxxA.xOUT_ErrFlag;          
+	xOUT_Wait		:=	_FB_ABL_xxxA.xOUT_Wait;
+	xOUT_AlarmST	:= 	xOUT_ErrFlag;	]]></ST>
+    </Implementation>
+    <LineIds Name="POU_AUT_VORLAGE">
+      <LineId Id="59" Count="24" />
+      <LineId Id="156" Count="10" />
+      <LineId Id="147" Count="8" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="107" Count="7" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
